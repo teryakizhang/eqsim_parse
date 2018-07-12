@@ -15,7 +15,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 fh = logging.FileHandler('Parse SIM Debug Log.txt')
-fh.setLevel(logging.DEBUG)
+fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
@@ -412,7 +412,6 @@ def post_process_beps(beps_dicts, output_to_csv=True):
 	return beps_dicts
 
 
-# TODO: Write create_ps_f_dict()
 def create_ps_f_dict(list_of_meters):
 	# TODO: Add ps_f_dict documentation
 	ps_f_dict = {}
@@ -443,18 +442,18 @@ def create_ps_f_dict(list_of_meters):
 	return ps_f_dict
 
 
-# TODO: post_pocess_ps_f
 def post_process_ps_f(ps_f_dict, output_to_csv=True):
-
+	# TODO: write documentation
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
 	# Output to CSV
+
 	with open('PS-F.csv', 'w') as f:
 		print('PS-F Report\n\n', file=f)
-	with open('PS-F.csv', 'a') as f:
 		for k, v in ps_f_dict.items():
+			logger.debug(v)
 			print(k, file=f)
 			v.to_csv(f)
 			print('', file=f)
@@ -462,7 +461,8 @@ def post_process_ps_f(ps_f_dict, output_to_csv=True):
 	return ps_f_dict
 
 def find_meters(f_list, pattern):
-	'''Finds all the PS-F meters in the SIM file and returns a list of strings repr them'''
+	'''Finds all the PS-F meters in the SIM file and returns a list of strings repr them.
+	Helper function for create_ps_f_dict()'''
 	all_meters = []
 
 	for i, line in enumerate(f_list):
@@ -514,13 +514,13 @@ def parse_sim(sim_path=None):
 	summ_pattern = '^\s{19}TOTAL'
 	unmet_pattern = '^\s{19}[PH]'
 
-	### ps_f ###
+	### PS-F ###
 	ps_f_header_pattern = 'REPORT- PS-F Energy End-Use Summary for\s+((.*?))\s+WEATHER FILE'
 	list_of_meters = find_meters(f_list, ps_f_header_pattern)
 	ps_f_dict = create_ps_f_dict(list_of_meters)
 	month_pattern = '^\w{3}\\n'
 
-	### PVA ###
+	### PV-A ###
 	pv_a_dict = create_pv_a_dict()
 	current_report = None
 	current_plant_equip = None
@@ -542,6 +542,7 @@ def parse_sim(sim_path=None):
 						print("Error, on line {i} couldn't find the name for the system. Here is the line:".format(i=i))
 						print(line)
 				if current_report == 'PS-F':
+					# Match meter names
 					m2 = re.match(ps_f_header_pattern, line)
 					if m2:
 						current_meter = m2.group(1)
@@ -560,7 +561,6 @@ def parse_sim(sim_path=None):
 				meter = m.group()
 				meter = meter.split()[0]
 				current_type = l_list[1]
-
 
 			if current_type in ["NATURAL-GAS", "ELECTRICITY"]:
 				if re.match("^\s{4}[MBTU]", line):
@@ -585,7 +585,6 @@ def parse_sim(sim_path=None):
 				if len(unmet_info) == 4:
 					beps_dict['UNMET INFO'].loc['Unmet'] = unmet_info
 
-		# TODO: Write parse PS-F
 		# Parsing PS-F
 		if current_report == 'PS-F' and len(l_list) > 0:
 			# Only split at 2 spaces or more so words like 'MAX KW' don't get split
@@ -596,9 +595,8 @@ def parse_sim(sim_path=None):
 			if month_m:
 				current_month = month_m.group()
 				current_month = current_month.rstrip()
-				logger.debug(current_month)
+
 			if psf_l_list[0] in ['KWH','MAX KW']:
-				# logger.debug(l_list)
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
 			# These two measures do not have a totals column, append empty item to make same length
@@ -606,8 +604,9 @@ def parse_sim(sim_path=None):
 				l_list.append('')
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
-			# This measure has a slash followed by a space, requires psf_l_list
+			# This measure has values with a slash followed by a space, requires psf_l_list
 			elif psf_l_list[0] == 'DAY/HR':
+				psf_l_list[-1] = psf_l_list[-1].rstrip('\n')
 				ps_f_dict[current_meter].loc[(current_month, 'Day/Hour'), :] = psf_l_list[-13:]
 
 		# Parsing PV-A
@@ -622,8 +621,6 @@ def parse_sim(sim_path=None):
 				if m2:
 					equip_name = m2.group(1)
 					pv_a_dict[current_plant_equip].loc[equip_name, :] = re.split('\s{2,}', f_list[i + 1].strip())
-
-
 
 		# Parsing SV-A
 		if current_report == 'SV-A' and len(l_list) > 0:
@@ -654,9 +651,6 @@ def parse_sim(sim_path=None):
 						print(i)
 						print(line)
 
-
-
-
 	sv_a_dict = post_process_sv_a(sv_a_dict, output_to_csv=True)
 	pv_a_dict = post_process_pv_a(pv_a_dict, output_to_csv=True)
 	beps_dict = post_process_beps(beps_dict, output_to_csv=True)
@@ -670,7 +664,5 @@ def parse_sim(sim_path=None):
 ### Main Function ###
 
 if __name__ == '__main__':
-	from io import open
-
 
 	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict = parse_sim(sim_path=None)
