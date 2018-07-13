@@ -4,7 +4,6 @@ import re
 import sys
 import logging
 
-
 import pandas as pd
 import numpy as np
 
@@ -25,39 +24,38 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
-
 def create_pv_a_dict():
 	"""
     Initializes a dictionary of dataframes for the PV-A report
 
     Args: None
-	------
+    -----
 
-	Returns:
-	--------
-		pv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
-			the PV-A reports
+    Returns:
+    -----
+        pv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
+            the PV-A reports
 
-	Needs:
-	-------------------------------
-		import pandas as pd
+    Requires:
+    -----
+        import pandas as pd
 
-	"""
+    """
 
 	pv_a_dict = {}
 
 	###### CIRCULATION LOOPS
 	loop_string = 'CIRCULATION LOOPS'
 	loop_info_cols = ['Heating Cap. (mmBTU/hr)',
-					  'Cooling Cap. (mmBTU/hr)',
-					  'Loop Flow (GPM)',
-					  'Total Head (ft)',
-					  'Supply UA (BTU/h.F)',
-					  'Supply Loss DT (F)',
-					  'Return UA (BTU/h.F)',
-					  'Return Loss DT (F)',
-					  'Loop Volume (gal)',
-					  'Fluid Heat Cap. (BTU/lb.F)']
+	                  'Cooling Cap. (mmBTU/hr)',
+	                  'Loop Flow (GPM)',
+	                  'Total Head (ft)',
+	                  'Supply UA (BTU/h.F)',
+	                  'Supply Loss DT (F)',
+	                  'Return UA (BTU/h.F)',
+	                  'Return Loss DT (F)',
+	                  'Loop Volume (gal)',
+	                  'Fluid Heat Cap. (BTU/lb.F)']
 	df = pd.DataFrame(columns=loop_info_cols)
 	df.index.name = 'Circulation Loop'
 	pv_a_dict[loop_string] = df
@@ -65,13 +63,13 @@ def create_pv_a_dict():
 	###### PUMPS
 	pump_string = 'PUMPS'
 	pump_info_cols = ['Attached to',
-					  'Flow (GPM)',
-					  'Head (ft)',
-					  'Head Setpoint (ft)',
-					  'Capacity Control',
-					  'Power (kW)',
-					  'Mech. Eff',
-					  'Motor Eff']
+	                  'Flow (GPM)',
+	                  'Head (ft)',
+	                  'Head Setpoint (ft)',
+	                  'Capacity Control',
+	                  'Power (kW)',
+	                  'Mech. Eff',
+	                  'Motor Eff']
 	df = pd.DataFrame(columns=pump_info_cols)
 	df.index.name = 'Pump'
 	pv_a_dict[pump_string] = df
@@ -79,12 +77,12 @@ def create_pv_a_dict():
 	###### PRIMARY EQUIPMENT (Chillers, boilers)
 	primary_string = 'PRIMARY EQUIPMENT'
 	primary_info_cols = ['Equipment Type',
-						 'Attached to',
-						 'Capacity (mmBTU/hr)',
-						 'Flow (GPM)',
-						 'EIR',
-						 'HIR',
-						 'Aux. (kW)']
+	                     'Attached to',
+	                     'Capacity (mmBTU/hr)',
+	                     'Flow (GPM)',
+	                     'EIR',
+	                     'HIR',
+	                     'Aux. (kW)']
 	df = pd.DataFrame(columns=primary_info_cols)
 	df.index.name = 'Primary Equipment'
 	pv_a_dict[primary_string] = df
@@ -92,13 +90,13 @@ def create_pv_a_dict():
 	###### COOLING TOWERS
 	ct_string = 'COOLING TOWERS'
 	ct_info_cols = ['Equipment Type',
-					'Attached to',
-					'Cap. (mmBTU/hr)',
-					'Flow (GPM)',
-					'Nb of Cells',
-					'Fan Power per Cell (kW)',
-					'Spray Power per Cell (kW)',
-					'Aux. (kW)']
+	                'Attached to',
+	                'Cap. (mmBTU/hr)',
+	                'Flow (GPM)',
+	                'Nb of Cells',
+	                'Fan Power per Cell (kW)',
+	                'Spray Power per Cell (kW)',
+	                'Aux. (kW)']
 	df = pd.DataFrame(columns=ct_info_cols)
 	df.index.name = 'Cooling Tower'
 	pv_a_dict[ct_string] = df
@@ -106,14 +104,14 @@ def create_pv_a_dict():
 	###### DHW Heaters
 	dhw_string = 'DW-HEATERS'
 	dhw_info_cols = ['Equipment Type',
-					 'Attached to',
-					 'Cap. (mmBTU/hr)',
-					 'Flow (GPM)',
-					 'EIR',
-					 'HIR',
-					 'Auxiliary (kW)',
-					 'Tank (Gal)',
-					 'Tank UA (BTU/h.ft)']
+	                 'Attached to',
+	                 'Cap. (mmBTU/hr)',
+	                 'Flow (GPM)',
+	                 'EIR',
+	                 'HIR',
+	                 'Auxiliary (kW)',
+	                 'Tank (Gal)',
+	                 'Tank UA (BTU/h.ft)']
 	df = pd.DataFrame(columns=dhw_info_cols)
 	df.index.name = 'DHW Heaters'
 	pv_a_dict[dhw_string] = df
@@ -123,28 +121,28 @@ def create_pv_a_dict():
 
 def post_process_pv_a(pv_a_dict, output_to_csv=True):
 	"""
-	Convert the dataframes in the dictionary to numeric dtype
-	and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
+    Convert the dataframes in the dictionary to numeric dtype
+    and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
 
-	Args:
-	------
-		pv_a_dict(dict of pd.DataFrame): dictionary of dataframes
-			that has the PV-A info
+    Args:
+    ------
+        pv_a_dict(dict of pd.DataFrame): dictionary of dataframes
+            that has the PV-A info
 
-		output_to_csv (boolean): whether you want to output 'PV-A.csv'
+        output_to_csv (boolean): whether you want to output 'PV-A.csv'
 
-	Returns:
-	--------
-		pv_a_dict(dict of pd.DataFrame): dataframes in numeric dtype and more metrics
+    Returns:
+    --------
+        pv_a_dict(dict of pd.DataFrame): dataframes in numeric dtype and more metrics
 
-		Also spits out a 'PV-A.csv' file if required.
+        Also spits out a 'PV-A.csv' file if required.
 
 
-	Needs:
-	-------------------------------
-		import pandas as pd
+    Needs:
+    -------------------------------
+        import pandas as pd
 
-	"""
+    """
 
 	# Convert numeric for circulation loops
 	df_circ = pv_a_dict['CIRCULATION LOOPS']
@@ -159,7 +157,7 @@ def post_process_pv_a(pv_a_dict, output_to_csv=True):
 	# Calculate fan kW/GPM for cooling towers
 	df_ct = pv_a_dict['COOLING TOWERS']
 	num_cols = ['Cap. (mmBTU/hr)', 'Flow (GPM)', 'Nb of Cells', 'Fan Power per Cell (kW)', 'Spray Power per Cell (kW)',
-				'Aux. (kW)']
+	            'Aux. (kW)']
 	df_ct[num_cols] = df_ct[num_cols].apply(lambda x: pd.to_numeric(x))
 	df_ct['Fan W/GPM'] = 1000 * df_ct['Fan Power per Cell (kW)'] * df_ct['Nb of Cells'] / df_ct['Flow (GPM)']
 	# GPM per ton
@@ -213,72 +211,72 @@ def post_process_pv_a(pv_a_dict, output_to_csv=True):
 
 def create_sv_a_dict():
 	"""
-	Initializes a dictionary of dataframes for the SV-A report
+    Initializes a dictionary of dataframes for the SV-A report
 
-	Args: None
-	------
+    Args: None
+    ------
 
-	Returns:
-	--------
-		sv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
-			the SV-A reports
-			Has three keys: 'Systems', 'Fans', 'Zones'
+    Returns:
+    --------
+        sv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
+            the SV-A reports
+            Has three keys: 'Systems', 'Fans', 'Zones'
 
-	Needs:
-	-------------------------------
-		import pandas as pd
+    Needs:
+    -------------------------------
+        import pandas as pd
 
-	"""
+    """
 
 	sv_a_dict = {}
 
 	system_info_cols = ['System Type',
-						'Altitude Factor',
-						'Floor Area (sqft)',
-						'Max People',
-						'Outside Air Ratio',
-						'Cooling Capacity (kBTU/hr)',
-						'Sensible (SHR)',
-						'Heating Capacity (kBTU/hr)',
-						'Cooling EIR (BTU/BTU)',
-						'Heating EIR (BTU/BTU)',
-						'Heat Pump Supplemental Heat (kBTU/hr)']
+	                    'Altitude Factor',
+	                    'Floor Area (sqft)',
+	                    'Max People',
+	                    'Outside Air Ratio',
+	                    'Cooling Capacity (kBTU/hr)',
+	                    'Sensible (SHR)',
+	                    'Heating Capacity (kBTU/hr)',
+	                    'Cooling EIR (BTU/BTU)',
+	                    'Heating EIR (BTU/BTU)',
+	                    'Heat Pump Supplemental Heat (kBTU/hr)']
 
 	system_info = pd.DataFrame(columns=system_info_cols)
 	system_info.index.name = 'System'
 	sv_a_dict['Systems'] = system_info
 
 	fan_info_cols = ['Capacity (CFM)',
-					 'Diversity Factor (FRAC)',
-					 'Power Demand (kW)',
-					 'Fan deltaT (F)',
-					 'Static Pressure (in w.c.)',
-					 'Total efficiency',
-					 'Mechanical Efficiency',
-					 'Fan Placement',
-					 'Fan Control',
-					 'Max Fan Ratio (Frac)',
-					 'Min Fan Ratio (Frac)']
+	                 'Diversity Factor (FRAC)',
+	                 'Power Demand (kW)',
+	                 'Fan deltaT (F)',
+	                 'Static Pressure (in w.c.)',
+	                 'Total efficiency',
+	                 'Mechanical Efficiency',
+	                 'Fan Placement',
+	                 'Fan Control',
+	                 'Max Fan Ratio (Frac)',
+	                 'Min Fan Ratio (Frac)']
 	index = pd.MultiIndex(levels=[['System'], ['Fan Type']],
-						  labels=[[], []],
-						  names=[u'System', u'Fan Type'])
+	                      labels=[[], []],
+	                      names=[u'System', u'Fan Type'])
 	fan_info = pd.DataFrame(index=index, columns=fan_info_cols)
 	sv_a_dict['Fans'] = fan_info
 
 	zone_info_cols = ['Supply Flow (CFM)',
-					  'Exhaust Flow (CFM)',
-					  'Fan (kW)',
-					  'Minimum Flow (Frac)',
-					  'Outside Air Flow (CFM)',
-					  'Cooling Capacity (kBTU/hr)',
-					  'Sensible (FRAC)',
-					  'Extract Rate (kBTU/hr)',
-					  'Heating Capacity (kBTU/hr)',
-					  'Addition Rate (kBTU/hr)',
-					  'Zone Mult']
+	                  'Exhaust Flow (CFM)',
+	                  'Fan (kW)',
+	                  'Minimum Flow (Frac)',
+	                  'Outside Air Flow (CFM)',
+	                  'Cooling Capacity (kBTU/hr)',
+	                  'Sensible (FRAC)',
+	                  'Extract Rate (kBTU/hr)',
+	                  'Heating Capacity (kBTU/hr)',
+	                  'Addition Rate (kBTU/hr)',
+	                  'Zone Mult']
 	index = pd.MultiIndex(levels=[['System'], ['Zone Name']],
-						  labels=[[], []],
-						  names=[u'System', u'Zone Name'])
+	                      labels=[[], []],
+	                      names=[u'System', u'Zone Name'])
 	zone_info = pd.DataFrame(index=index, columns=zone_info_cols)
 	sv_a_dict['Zones'] = zone_info
 
@@ -287,27 +285,27 @@ def create_sv_a_dict():
 
 def post_process_sv_a(sv_a_dict, output_to_csv=True):
 	"""
-	Convert the dataframe to numeric dtype
-	and calculates some efficiency metrics, such as Fan W/CFM
+    Convert the dataframe to numeric dtype
+    and calculates some efficiency metrics, such as Fan W/CFM
 
-	Args:
-	------
-		sv_a_dict(dict pd.DataFrame): Dictionary of DataFrame with SV-A report data
+    Args:
+    ------
+        sv_a_dict(dict pd.DataFrame): Dictionary of DataFrame with SV-A report data
 
-		output_to_csv (boolean): whether you want to output 'SV-A.csv'
+        output_to_csv (boolean): whether you want to output 'SV-A.csv'
 
-	Returns:
-	--------
-		system_info(pd.DataFrame): dataframe in numeric dtype and more metrics
+    Returns:
+    --------
+        system_info(pd.DataFrame): dataframe in numeric dtype and more metrics
 
-		Also spits out a 'SV-A.csv' file if required.
+        Also spits out a 'SV-A.csv' file if required.
 
 
-	Needs:
-	-------------------------------
-		import pandas as pd
+    Needs:
+    -------------------------------
+        import pandas as pd
 
-	"""
+    """
 
 	# Convert to numeric
 	sv_a_dict['Systems'].iloc[:, 1:] = sv_a_dict['Systems'].iloc[:, 1:].apply(lambda x: pd.to_numeric(x))
@@ -337,24 +335,39 @@ def post_process_sv_a(sv_a_dict, output_to_csv=True):
 
 def create_beps_dict():
 	# TODO: add beps_dict documentation
+	'''
+    Initializes a dictioanry of dataframes for BEPS report
+
+    Args: None
+    -----
+
+    Returns:
+    -----
+        (dict of pd.DataFrame)
+            A dictionary of dataframes that corresponds to BEPS report
+
+    Requires:
+    -----
+        import pandas as pd
+    '''
 	beps_dict = {}
 
 	##### BUILDING COMPONENTS
 	component_string = 'BUILDING COMPONENTS'
 	component_info_cols = ['Energy Type',
-						   'Lights',
-						   'Task Lights',
-						   'Misc Equipment',
-						   'Space Heating',
-						   'Space Cooling',
-						   'Heat Reject',
-						   'Pumps/Aux',
-						   'Vent Fans',
-						   'Refrig Display',
-						   'Ht Pump Supplem',
-						   'DHW',
-						   'Ext Usage',
-						   'Total']
+	                       'Lights',
+	                       'Task Lights',
+	                       'Misc Equipment',
+	                       'Space Heating',
+	                       'Space Cooling',
+	                       'Heat Reject',
+	                       'Pumps/Aux',
+	                       'Vent Fans',
+	                       'Refrig Display',
+	                       'Ht Pump Supplem',
+	                       'DHW',
+	                       'Ext Usage',
+	                       'Total']
 	df = pd.DataFrame(columns=component_info_cols)
 	df.index.name = 'Meters'
 	beps_dict[component_string] = df
@@ -362,8 +375,8 @@ def create_beps_dict():
 	###### Energy Summary
 	summary_string = "ENERGY SUMMARY"
 	summary_info_cols = ['Total [MBTU]',
-						 'Energy per GFA [kBTU/sqft]',
-						 'Energy per Net Area [kBTU/sqft]']
+	                     'Energy per GFA [kBTU/sqft]',
+	                     'Energy per Net Area [kBTU/sqft]']
 	df = pd.DataFrame(columns=summary_info_cols)
 	df.index.name = 'Energy Summary'
 	beps_dict[summary_string] = df
@@ -371,9 +384,9 @@ def create_beps_dict():
 	###### Unmet Information
 	unmet_string = "UNMET INFO"
 	unmet_info_cols = ['% of Hours Outside Throttling Range',
-					   '% of Hours Plant Load Unmet',
-					   'Hours Cooling Unmet',
-					   'Hours Heating Unmet']
+	                   '% of Hours Plant Load Unmet',
+	                   'Hours Cooling Unmet',
+	                   'Hours Heating Unmet']
 	df = pd.DataFrame(columns=unmet_info_cols)
 	df.index.name = 'Unmet Info'
 	beps_dict[unmet_string] = df
@@ -391,12 +404,12 @@ def post_process_beps(beps_dicts, output_to_csv=True):
 
 	# Convert summary to numeric
 	df_summ = beps_dicts['ENERGY SUMMARY']
-	df_summ	= df_summ.apply(lambda x:pd.to_numeric(x))
+	df_summ = df_summ.apply(lambda x: pd.to_numeric(x))
 
 	# Convert Unmet Info to numeric
 	df_unmet = beps_dicts['UNMET INFO']
-	df_unmet = df_unmet.apply(lambda x:pd.to_numeric(x))
-	zone_percent = df_unmet.loc['Unmet']['% of Hours Outside Throttling Range']/100
+	df_unmet = df_unmet.apply(lambda x: pd.to_numeric(x))
+	zone_percent = df_unmet.loc['Unmet']['% of Hours Outside Throttling Range'] / 100
 	load_percent = df_unmet.loc['Unmet']['% of Hours Plant Load Unmet'] / 100
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Outside Throttling Range'] = zone_percent
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Plant Load Unmet'] = load_percent
@@ -419,20 +432,20 @@ def create_ps_f_dict(list_of_meters):
 	##### BUILDING COMPONENTS
 	component_string = 'BUILDING COMPONENTS'
 	component_info_cols = ['Lights',
-						   'Task Lights',
-						   'Misc Equipment',
-						   'Space Heating',
-						   'Space Cooling',
-						   'Heat Reject',
-						   'Pumps/Aux',
-						   'Vent Fans',
-						   'Refrig Display',
-						   'Ht Pump Supplem',
-						   'DHW',
-						   'Ext Usage',
-						   'Total']
-	ind_list = [['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],
-	                              ['KWH','Max KW','Day/Hour','Peak End Use','Peak Pct']]
+	                       'Task Lights',
+	                       'Misc Equipment',
+	                       'Space Heating',
+	                       'Space Cooling',
+	                       'Heat Reject',
+	                       'Pumps/Aux',
+	                       'Vent Fans',
+	                       'Refrig Display',
+	                       'Ht Pump Supplem',
+	                       'DHW',
+	                       'Ext Usage',
+	                       'Total']
+	ind_list = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+	            ['KWH', 'Max KW', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
 	index = pd.MultiIndex.from_product(ind_list, names=[u'Month', u'Measure'])
 	component_info = pd.DataFrame(index=index, columns=component_info_cols)
 	# Creates a dictionary item for each meter
@@ -453,16 +466,16 @@ def post_process_ps_f(ps_f_dict, output_to_csv=True):
 	with open('PS-F.csv', 'w') as f:
 		print('PS-F Report\n\n', file=f)
 		for k, v in ps_f_dict.items():
-			logger.debug(v)
 			print(k, file=f)
 			v.to_csv(f)
 			print('', file=f)
 
 	return ps_f_dict
 
+
 def find_meters(f_list, pattern):
 	'''Finds all the PS-F meters in the SIM file and returns a list of strings repr them.
-	Helper function for create_ps_f_dict()'''
+    Helper function for create_ps_f_dict()'''
 	all_meters = []
 
 	for i, line in enumerate(f_list):
@@ -479,25 +492,46 @@ def find_meters(f_list, pattern):
 
 	return all_meters
 
+
+# TODO: Write LV-D dict
+
+# TODO: Write post_process_LV-D
+
 ### Parse Function ###
 
 def parse_sim(sim_path=None):
 	# Load SIM File
+
 	if sim_path is None:
 
 		filelist = gb.glob('./*.SIM')
 		if len(filelist) != 1:
-			raise Exception("Too many SIM or none found")
+			raise Exception("Too many SIM files found")
 			exit()
+		# 	raise Exception("No SIM file found. Please put your SIM files in the same directory as this.")
+		# 	exit()
+		# elif len(filelist) == 1:
+		# 	proceed = input("I found 1 SIM file. Proceed with this? (Y/N): ")
+		# 	if proceed == "Y":
+		#
+		# 	else: exit()
+		# TODO: Add batch process SIM Support
+		# elif len(filelist) > 1:
+		# 	multi = input(" I found {} SIM files. \
+		# 	Do you want to process all the SIM I found? (Y/N): ".format(len(filelist)))
+		# 	if multi == "N" and len(filelist) != 1:
+		# 		raise Exception("Too many SIM files found. Please only put the SIM you want to process")
+		# 		exit()
+		# 	elif multi == "Y":
+		# 		for file in filelist:
+		# 			sim_path = file
 		else:
 			sim_path = filelist[0]
 			logging.info('Loading{}'.format(sim_path))
 
-	# if "Easter" in sim_path:
-	# 	print("Made by TZ")
+			with open(sim_path, encoding="Latin1") as f:
+				f_list = f.readlines()
 
-	with open(sim_path, encoding="Latin1") as f:
-		f_list = f.readlines()
 
 	### SVA ###
 	# Initializes a dictionary of dataframes to collect the SV-A report data
@@ -576,7 +610,7 @@ def parse_sim(sim_path=None):
 				summ_info = [l_list[1]] + [l_list[3]] + [l_list[6]]
 				beps_dict['ENERGY SUMMARY'].loc[current_summ] = summ_info
 
-		# Match with unmet hours information
+			# Match with unmet hours information
 			m3 = re.match(unmet_pattern, line)
 			if m3:
 				if len(unmet_info) < 4:
@@ -589,14 +623,14 @@ def parse_sim(sim_path=None):
 		if current_report == 'PS-F' and len(l_list) > 0:
 			# Only split at 2 spaces or more so words like 'MAX KW' don't get split
 			psf_l_list = re.split(r'\s{2,}', line)
-			measure_dict = {'KWH':'KWH', 'MAX KW':'Max KW', 'PEAK ENDUSE':'Peak End Use', 'PEAK PCT':'Peak Pct'}
+			measure_dict = {'KWH': 'KWH', 'MAX KW': 'Max KW', 'PEAK ENDUSE': 'Peak End Use', 'PEAK PCT': 'Peak Pct'}
 			# Match current month
 			month_m = re.match(month_pattern, line)
 			if month_m:
 				current_month = month_m.group()
 				current_month = current_month.rstrip()
 
-			if psf_l_list[0] in ['KWH','MAX KW']:
+			if psf_l_list[0] in ['KWH', 'MAX KW']:
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
 			# These two measures do not have a totals column, append empty item to make same length
@@ -636,9 +670,9 @@ def parse_sim(sim_path=None):
 			if current_sv_a_section == 'FAN':
 				# If starts by two spaces and an alpha
 				if re.match('^\s{2}\w', line):
-					if len(l_list[1:]) > 11:
-						l_list[9:11] = ''.join(l_list[9:11])
 
+					if len(l_list[1:]) > 11:
+						l_list[9:11] = [''.join(l_list[9:11])]
 					sv_a_dict['Fans'].loc[(system_name, l_list[0]), :] = l_list[1:]
 
 			if current_sv_a_section == 'ZONE':
@@ -664,5 +698,4 @@ def parse_sim(sim_path=None):
 ### Main Function ###
 
 if __name__ == '__main__':
-
 	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict = parse_sim(sim_path=None)
