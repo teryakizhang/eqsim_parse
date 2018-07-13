@@ -5,7 +5,6 @@ import sys
 import logging
 
 import pandas as pd
-import numpy as np
 
 ### DEBUG ###
 logger = logging.getLogger()
@@ -699,3 +698,5 @@ def parse_sim(sim_path=None):
 
 if __name__ == '__main__':
 	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict = parse_sim(sim_path=None)
+
+	sys.exit(0)
