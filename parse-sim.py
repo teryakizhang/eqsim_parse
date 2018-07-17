@@ -118,7 +118,7 @@ def create_pv_a_dict():
 	return pv_a_dict
 
 
-def post_process_pv_a(pv_a_dict, filename, output_to_csv=True):
+def post_process_pv_a(pv_a_dict, output_to_csv=True):
 	"""
     Convert the dataframes in the dictionary to numeric dtype
     and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
@@ -196,8 +196,10 @@ def post_process_pv_a(pv_a_dict, filename, output_to_csv=True):
 	df_dhw['Thermal Eff'] = 1 / df_dhw['HIR']
 
 	# Output to CSV
-	with open('{} PV-A.csv'.format(filename), 'w') as f:
-		print('{} PV-A Report\n\n'.format(filename), file=f)
+	with open('PV-A.csv', 'w') as f:
+		print('PV-A Report\n\n', file=f)
+
+	with open('PV-A.csv', 'a') as f:
 		for k, v in pv_a_dict.items():
 			print(k, file=f)
 			v.to_csv(f)
@@ -280,7 +282,7 @@ def create_sv_a_dict():
 	return sv_a_dict
 
 
-def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
+def post_process_sv_a(sv_a_dict, output_to_csv=True):
 	"""
     Convert the dataframe to numeric dtype
     and calculates some efficiency metrics, such as Fan W/CFM
@@ -319,8 +321,9 @@ def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
 	sv_a_dict['Zones']['W/CFM'] = sv_a_dict['Zones']['Fan (kW)'] * 1000 / sv_a_dict['Zones']['Supply Flow (CFM)']
 
 	# Output to CSV
-	with open('{} SV-A.csv'.format(filename), 'w') as f:
-		print('{} SV-A Report\n\n'.format(filename), file=f)
+	with open('SV-A.csv', 'w') as f:
+		print('SV-A Report\n\n', file=f)
+	with open('SV-A.csv', 'a') as f:
 		for k, v in sv_a_dict.items():
 			print(k, file=f)
 			v.to_csv(f)
@@ -390,7 +393,7 @@ def create_beps_dict():
 	return beps_dict
 
 
-def post_process_beps(beps_dicts, filename, output_to_csv=True):
+def post_process_beps(beps_dicts, output_to_csv=True):
 	# TODO: Add post_process_beps documentation
 	# Convert to numeric
 	df_comp = beps_dicts['BUILDING COMPONENTS']
@@ -411,8 +414,8 @@ def post_process_beps(beps_dicts, filename, output_to_csv=True):
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Plant Load Unmet'] = load_percent
 
 	# Output to CSV
-	with open('{} BEPS.csv'.format(filename), 'w') as f:
-		print('{} BEPS Report\n\n'.format(filename), file=f)
+	with open('BEPS.csv', 'w') as f:
+		print('BEPS Report\n\n', file=f)
 		for k, v in beps_dicts.items():
 			print(k, file=f)
 			v.to_csv(f)
@@ -443,15 +446,15 @@ def create_ps_f_dict(list_of_meters):
 	ind_list = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
 	            ['KWH', 'Max KW', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
 	index = pd.MultiIndex.from_product(ind_list, names=[u'Month', u'Measure'])
-	# component_info = pd.DataFrame(index=index, columns=component_info_cols)
+	component_info = pd.DataFrame(index=index, columns=component_info_cols)
 	# Creates a dictionary item for each meter
 	for meter in list_of_meters:
-		ps_f_dict[meter] = pd.DataFrame(index=index, columns=component_info_cols)
+		ps_f_dict[meter] = component_info
 
 	return ps_f_dict
 
 
-def post_process_ps_f(ps_f_dict, filename, output_to_csv=True):
+def post_process_ps_f(ps_f_dict, output_to_csv=True):
 	# TODO: write documentation
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
@@ -459,8 +462,8 @@ def post_process_ps_f(ps_f_dict, filename, output_to_csv=True):
 
 	# Output to CSV
 
-	with open('{} PS-F.csv'.format(filename), 'w') as f:
-		print('{} PS-F Report\n\n'.format(filename), file=f)
+	with open('PS-F.csv', 'w') as f:
+		print('PS-F Report\n\n', file=f)
 		for k, v in ps_f_dict.items():
 			print(k, file=f)
 			v.to_csv(f)
@@ -469,90 +472,24 @@ def post_process_ps_f(ps_f_dict, filename, output_to_csv=True):
 	return ps_f_dict
 
 
-def find_in_header(f_list, pattern, report):
-	'''
-	Helper function
-	Finds either zones or meters in headers of the SIM file and returns a list of strings repr them.
-    '''
-	all_finds = []
+def find_meters(f_list, pattern):
+	'''Finds all the PS-F meters in the SIM file and returns a list of strings repr them.
+    Helper function for create_ps_f_dict()'''
+	all_meters = []
 
 	for i, line in enumerate(f_list):
 		l_list = line.split()
 		if len(l_list) > 1:
-			if l_list[0] == "REPORT-" and l_list[1] == report:
-				find_m = re.match(pattern, line)
-				if find_m:
-					current_find = find_m.group(1)
-					if current_find not in all_finds:
-						all_finds.append(current_find)
+			if l_list[0] == "REPORT-":
+				current_report = l_list[1]
+				if current_report == 'PS-F':
+					meter_m = re.match(pattern, line)
+					if meter_m:
+						current_meter = meter_m.group(1)
+						if current_meter not in all_meters:
+							all_meters.append(current_meter)
 
-	return all_finds
-
-
-def create_ss_a_dict(list_of_sys):
-	ss_a_dict = {}
-	ss_a_cols = ['Cooling Energy (MBTU)',
-	             'Day', 'Hour',
-	             'Dry-bulb Temp',
-	             'Wet-bulb Temp',
-	             'Max Cooling Load (KBtu/hr)',
-	             'Heating Energy (MBTU)',
-	             'Day', 'Hour',
-	             'Dry-bulb Temp',
-	             'Wet-bulb Temp',
-	             'Max Heating Load (KBtu/hr)',
-	             'Electrical Energy (KWH)',
-	             'Max Elec Load (KW)']
-	ind_list = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'TOTAL', 'MAX']
-	for sys in list_of_sys:
-		ss_a_dict[sys] = pd.DataFrame(index=ind_list, columns=ss_a_cols)
-
-	return ss_a_dict
-
-
-def post_process_ss_a(ss_a_dict, filename, output_to_csv=True):
-	for k in ss_a_dict:
-		ss_a_dict[k] = ss_a_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
-
-	with open('{} SS-A.csv'.format(filename), 'w') as f:
-		print('{} SS-A Report\n\n'.format(filename), file=f)
-		for k, v in ss_a_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
-
-	return ss_a_dict
-
-
-def create_ss_b_dict(list_of_sys):
-	ss_b_dict = {}
-	ss_b_cols = ['Cooling by Zone Coils or Nat Ventil (MBTU)',
-	             'Max Cooling by Zone Coils or Nat Ventil (KBtu/Hr)',
-	             'Heating by Zone Coils or Nat Ventil (MBTU)',
-	             'Max Heating by Zone Coils or Nat Ventil (KBtu/Hr)',
-	             'Baseboard Heating Energy (MBTU)',
-	             'Max Baseboard Heating Energy (KBtu/Hr)',
-	             'Preheat Coil Energy or Elec For Furn Fan (MBTU)',
-	             'Max Preheat Coil Energy or Elec for Furn Fan (KBtu/Hr)']
-	ind_list = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'TOTAL', 'MAX']
-	for sys in list_of_sys:
-		ss_b_dict[sys] = pd.DataFrame(index=ind_list, columns=ss_b_cols)
-
-	return ss_b_dict
-
-
-def post_process_ss_b(ss_b_dict, filename, output_to_csv=True):
-	for k in ss_b_dict:
-		ss_b_dict[k] = ss_b_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
-
-	with open('{} SS-B.csv'.format(filename), 'w') as f:
-		print('{} SS-B Report\n\n'.format(filename), file=f)
-		for k, v in ss_b_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
-
-	return ss_b_dict
+	return all_meters
 
 
 # TODO: Write LV-D dict
@@ -594,6 +531,7 @@ def parse_sim(sim_path=None):
 			with open(sim_path, encoding="Latin1") as f:
 				f_list = f.readlines()
 
+
 	### SVA ###
 	# Initializes a dictionary of dataframes to collect the SV-A report data
 	sv_a_dict = create_sv_a_dict()
@@ -611,7 +549,7 @@ def parse_sim(sim_path=None):
 
 	### PS-F ###
 	ps_f_header_pattern = 'REPORT- PS-F Energy End-Use Summary for\s+((.*?))\s+WEATHER FILE'
-	list_of_meters = find_in_header(f_list, ps_f_header_pattern, 'PS-F')
+	list_of_meters = find_meters(f_list, ps_f_header_pattern)
 	ps_f_dict = create_ps_f_dict(list_of_meters)
 	month_pattern = '^\w{3}\\n'
 
@@ -620,15 +558,6 @@ def parse_sim(sim_path=None):
 	current_report = None
 	current_plant_equip = None
 	plant_equip_pattern = '\*\*\* (.*?) \*\*\*'
-
-	### SS-A ###
-	ss_a_header_pattern = 'REPORT- SS-A System Loads Summary for\s+((.*?))\s+WEATHER FILE'
-	list_of_sys = find_in_header(f_list, ss_a_header_pattern, 'SS-A')
-	ss_a_dict = create_ss_a_dict(list_of_sys)
-
-	### SS-B ###
-	ss_b_header_pattern = 'REPORT- SS-B System Loads Summary for\s+((.*?))\s+WEATHER FILE'
-	ss_b_dict = create_ss_b_dict(list_of_sys)
 
 	### Parsing ###
 	for i, line in enumerate(f_list):
@@ -645,27 +574,13 @@ def parse_sim(sim_path=None):
 					else:
 						print("Error, on line {i} couldn't find the name for the system. Here is the line:".format(i=i))
 						print(line)
-				elif current_report == 'PS-F':
+				if current_report == 'PS-F':
 					# Match meter names
 					m2 = re.match(ps_f_header_pattern, line)
 					if m2:
 						current_meter = m2.group(1)
 					else:
 						raise Exception("Error, no meter name")
-						print(line)
-				elif current_report == 'SS-A':
-					m3 = re.match(ss_a_header_pattern, line)
-					if m3:
-						current_sys = m3.group(1)
-					else:
-						raise Exception('Error, no SS-A system name')
-						print(line)
-				elif current_report == 'SS-B':
-					m4 = re.match(ss_b_header_pattern, line)
-					if m4:
-						current_sys = m4.group(1)
-					else:
-						raise Exception('Error, no SS-B system name')
 						print(line)
 				continue
 
@@ -707,8 +622,7 @@ def parse_sim(sim_path=None):
 		if current_report == 'PS-F' and len(l_list) > 0:
 			# Only split at 2 spaces or more so words like 'MAX KW' don't get split
 			psf_l_list = re.split(r'\s{2,}', line)
-			measure_dict = {'KWH': 'KWH', 'MAX KW': 'Max KW', 'PEAK ENDUSE': 'Peak End Use', 'PEAK PCT': 'Peak Pct',
-			                'MAX THERM/HR': 'Max Therm/Hr', 'THERM': 'Therm'}
+			measure_dict = {'KWH': 'KWH', 'MAX KW': 'Max KW', 'PEAK ENDUSE': 'Peak End Use', 'PEAK PCT': 'Peak Pct'}
 			# Match current month
 			month_m = re.match(month_pattern, line)
 			if month_m:
@@ -716,13 +630,6 @@ def parse_sim(sim_path=None):
 				current_month = current_month.rstrip()
 
 			if psf_l_list[0] in ['KWH', 'MAX KW']:
-				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
-
-			elif psf_l_list[0] in ['THERM', 'MAX THERM/HR']:
-				df = ps_f_dict[current_meter]
-				new_index = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-				             ['Therm', 'Max Therm/Hr', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
-				df.index = pd.MultiIndex.from_product(new_index, names=[u'Month', u'Measure'])
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
 			# These two measures do not have a totals column, append empty item to make same length
@@ -734,31 +641,6 @@ def parse_sim(sim_path=None):
 			elif psf_l_list[0] == 'DAY/HR':
 				psf_l_list[-1] = psf_l_list[-1].rstrip('\n')
 				ps_f_dict[current_meter].loc[(current_month, 'Day/Hour'), :] = psf_l_list[-13:]
-
-		# Parsing SS-A
-		if current_report == 'SS-A' and len(l_list) > 0:
-
-			# logger.debug(l_list[0])
-			if l_list[0] in ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']:
-				ss_a_dict[current_sys].loc[l_list[0]] = l_list[1:]
-
-			elif l_list[0] == 'TOTAL':
-				total_list = [l_list[1]] + [''] * 5 + [l_list[2]] + [''] * 5 + [l_list[3]] + ['']
-				ss_a_dict[current_sys].loc[l_list[0]] = total_list
-			elif l_list[0] == 'MAX':
-				max_list = [''] * 5 + [l_list[1]] + [''] * 5 + [l_list[2]] + [''] + [l_list[3]]
-				ss_a_dict[current_sys].loc[l_list[0]] = max_list
-
-		# Parsing SS-B
-		if current_report == 'SS-B' and len(l_list) > 0:
-			if l_list[0] in ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']:
-				ss_b_dict[current_sys].loc[l_list[0]] = l_list[1:]
-			elif l_list[0] == 'TOTAL':
-				total_list = [l_list[1]] + [''] + [l_list[2]] + [''] + [l_list[3]] + [''] + [l_list[4]] + ['']
-				ss_b_dict[current_sys].loc[l_list[0]] = total_list
-			elif l_list[0] == 'MAX':
-				max_list = [''] + [l_list[1]] + [''] + [l_list[2]] + [''] + [l_list[3]] + [''] + [l_list[4]]
-				ss_b_dict[current_sys].loc[l_list[0]] = max_list
 
 		# Parsing PV-A
 		if current_report == 'PV-A':
@@ -802,22 +684,19 @@ def parse_sim(sim_path=None):
 						print(i)
 						print(line)
 
-	sv_a_dict = post_process_sv_a(sv_a_dict, filename=sim_path, output_to_csv=True)
-	pv_a_dict = post_process_pv_a(pv_a_dict, filename=sim_path, output_to_csv=True)
-	beps_dict = post_process_beps(beps_dict, filename=sim_path, output_to_csv=True)
-	ps_f_dict = post_process_ps_f(ps_f_dict, filename=sim_path, output_to_csv=True)
-	ss_a_dict = post_process_ss_a(ss_a_dict, filename=sim_path, output_to_csv=True)
-	ss_b_dict = post_process_ss_b(ss_b_dict, filename=sim_path, output_to_csv=True)
+	sv_a_dict = post_process_sv_a(sv_a_dict, output_to_csv=True)
+	pv_a_dict = post_process_pv_a(pv_a_dict, output_to_csv=True)
+	beps_dict = post_process_beps(beps_dict, output_to_csv=True)
+	ps_f_dict = post_process_ps_f(ps_f_dict, output_to_csv=True)
 
-	# logger.debug(ss_b_dict)
 	logger.info("All Done!")
 
-	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict
+	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict
 
 
 ### Main Function ###
 
 if __name__ == '__main__':
-	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict = parse_sim(sim_path=None)
+	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict = parse_sim(sim_path=None)
 
 	sys.exit(0)
