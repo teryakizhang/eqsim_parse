@@ -288,8 +288,8 @@ def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
     Args:
     ------
         sv_a_dict(dict pd.DataFrame): Dictionary of DataFrame with SV-A report data
-		filename(str): A string representing the filename of the CSV
-        output_to_csv (boolean): whether you want to output 'SV-A.csv'. Defaults True
+
+        output_to_csv (boolean): whether you want to output 'SV-A.csv'
 
     Returns:
     --------
@@ -330,6 +330,7 @@ def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
 
 
 def create_beps_dict():
+	# TODO: add beps_dict documentation
 	'''
     Initializes a dictioanry of dataframes for BEPS report
 
@@ -425,6 +426,7 @@ def create_ps_f_dict(list_of_meters):
 	ps_f_dict = {}
 
 	##### BUILDING COMPONENTS
+	component_string = 'BUILDING COMPONENTS'
 	component_info_cols = ['Lights',
 	                       'Task Lights',
 	                       'Misc Equipment',
@@ -441,6 +443,7 @@ def create_ps_f_dict(list_of_meters):
 	ind_list = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
 	            ['KWH', 'Max KW', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
 	index = pd.MultiIndex.from_product(ind_list, names=[u'Month', u'Measure'])
+	# component_info = pd.DataFrame(index=index, columns=component_info_cols)
 	# Creates a dictionary item for each meter
 	for meter in list_of_meters:
 		ps_f_dict[meter] = pd.DataFrame(index=index, columns=component_info_cols)
@@ -449,7 +452,7 @@ def create_ps_f_dict(list_of_meters):
 
 
 def post_process_ps_f(ps_f_dict, filename, output_to_csv=True):
-	# TODO: write PS-F documentation
+	# TODO: write documentation
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
@@ -470,20 +473,6 @@ def find_in_header(f_list, pattern, report):
 	'''
 	Helper function
 	Finds either zones or meters in headers of the SIM file and returns a list of strings repr them.
-
-	Args
-	-----
-		f_list(listof Str): A list of string from reading the SIM file
-		pattern(str): A regex specifying what header to search
-		report(str): A string representing what report the pattern is to be found
-
-	Returns
-	-----
-		(listof Str): A list of strings representing the pattern (meter/system) found
-
-	Requires
-	-----
-		None
     '''
 	all_finds = []
 
@@ -572,35 +561,38 @@ def post_process_ss_b(ss_b_dict, filename, output_to_csv=True):
 
 ### Parse Function ###
 
-def multi_sim():
-	filelist = gb.glob('./*.SIM')
-	if len(filelist) < 1:
-		raise Exception("No SIM file found. Please put your SIM files in the same directory as this.")
-		exit()
-	elif len(filelist) == 1:
-		proceed = input("I found 1 SIM file. Proceed with this? (Y/N): ")
-		if proceed == "Y":
-			return parse_sim(filelist[0])
+def parse_sim(sim_path=None):
+	# Load SIM File
+
+	if sim_path is None:
+
+		filelist = gb.glob('./*.SIM')
+		if len(filelist) != 1:
+			raise Exception("Too many SIM files found")
+			exit()
+		# 	raise Exception("No SIM file found. Please put your SIM files in the same directory as this.")
+		# 	exit()
+		# elif len(filelist) == 1:
+		# 	proceed = input("I found 1 SIM file. Proceed with this? (Y/N): ")
+		# 	if proceed == "Y":
+		#
+		# 	else: exit()
+		# TODO: Add batch process SIM Support
+		# elif len(filelist) > 1:
+		# 	multi = input(" I found {} SIM files. \
+		# 	Do you want to process all the SIM I found? (Y/N): ".format(len(filelist)))
+		# 	if multi == "N" and len(filelist) != 1:
+		# 		raise Exception("Too many SIM files found. Please only put the SIM you want to process")
+		# 		exit()
+		# 	elif multi == "Y":
+		# 		for file in filelist:
+		# 			sim_path = file
 		else:
-			exit()
-	# TODO: Add batch process SIM Support
-	elif len(filelist) > 1:
-		multi = input(" I found {} SIM files. \
-		Do you want to process all the SIM I found? (Y/N): ".format(len(filelist)))
-		if multi == "N" and len(filelist) != 1:
-			raise Exception("Too many SIM files found. Please only put the SIM you want to process")
-			exit()
-		elif multi == "Y":
-			for file in filelist:
-				sim_path = file
-				parse_sim(sim_path)
+			sim_path = filelist[0]
+			logging.info('Loading{}'.format(sim_path))
 
-
-def parse_sim(sim_path):
-	logging.info('Loading{}'.format(sim_path))
-
-	with open(sim_path, encoding="Latin1") as f:
-		f_list = f.readlines()
+			with open(sim_path, encoding="Latin1") as f:
+				f_list = f.readlines()
 
 	### SVA ###
 	# Initializes a dictionary of dataframes to collect the SV-A report data
@@ -826,7 +818,6 @@ def parse_sim(sim_path):
 ### Main Function ###
 
 if __name__ == '__main__':
-	# sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict = parse_sim(sim_path=None)
-	multi_sim()
+	sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict = parse_sim(sim_path=None)
 
 	sys.exit(0)
