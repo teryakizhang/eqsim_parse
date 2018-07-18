@@ -579,18 +579,18 @@ def multi_sim():
 		exit()
 	elif len(filelist) == 1:
 		proceed = input("I found 1 SIM file. Proceed with this? (Y/N): ")
-		if proceed == "Y":
+		if proceed in ['Y', 'y']:
 			return parse_sim(filelist[0])
 		else:
 			exit()
 	# TODO: Add batch process SIM Support
 	elif len(filelist) > 1:
-		multi = input(" I found {} SIM files. \
-		Do you want to process all the SIM I found? (Y/N): ".format(len(filelist)))
-		if multi == "N" and len(filelist) != 1:
+		proceed = input("I found {} SIM files. \nDo you want to process all the "
+		                "SIM I found? (Y/N): ".format(len(filelist)))
+		if proceed in ['N', 'n'] and len(filelist) != 1:
 			raise Exception("Too many SIM files found. Please only put the SIM you want to process")
 			exit()
-		elif multi == "Y":
+		elif proceed in ['Y', 'y']:
 			for file in filelist:
 				sim_path = file
 				parse_sim(sim_path)
@@ -817,7 +817,6 @@ def parse_sim(sim_path):
 	ss_a_dict = post_process_ss_a(ss_a_dict, filename=sim_path, output_to_csv=True)
 	ss_b_dict = post_process_ss_b(ss_b_dict, filename=sim_path, output_to_csv=True)
 
-	# logger.debug(ss_b_dict)
 	logger.info("All Done!")
 
 	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict
@@ -826,7 +825,6 @@ def parse_sim(sim_path):
 ### Main Function ###
 
 if __name__ == '__main__':
-	# sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict = parse_sim(sim_path=None)
 	multi_sim()
 
 	sys.exit(0)
