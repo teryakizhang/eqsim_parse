@@ -25,21 +25,21 @@ logger.addHandler(ch)
 
 def create_pv_a_dict():
 	"""
-    Initializes a dictionary of dataframes for the PV-A report
+	Initializes a dictionary of dataframes for the PV-A report
 
-    Args: None
-    -----
+	Args: None
+	-----
 
-    Returns:
-    -----
-        pv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
-            the PV-A reports
+	Returns:
+	-----
+		pv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
+			the PV-A reports
 
-    Requires:
-    -----
-        import pandas as pd
+	Requires:
+	-----
+		import pandas as pd
 
-    """
+	"""
 
 	pv_a_dict = {}
 
@@ -118,30 +118,30 @@ def create_pv_a_dict():
 	return pv_a_dict
 
 
-def post_process_pv_a(pv_a_dict, filename, output_to_csv=True):
+def post_process_pv_a(pv_a_dict, filename):
 	"""
-    Convert the dataframes in the dictionary to numeric dtype
-    and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
+	Convert the dataframes in the dictionary to numeric dtype
+	and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
 
-    Args:
-    ------
-        pv_a_dict(dict of pd.DataFrame): dictionary of dataframes
-            that has the PV-A info
+	Args:
+	------
+		pv_a_dict(dict of pd.DataFrame): dictionary of dataframes
+			that has the PV-A info
 
-        output_to_csv (boolean): whether you want to output 'PV-A.csv'
+		output_to_csv (boolean): whether you want to output 'PV-A.csv'
 
-    Returns:
-    --------
-        pv_a_dict(dict of pd.DataFrame): dataframes in numeric dtype and more metrics
+	Returns:
+	--------
+		pv_a_dict(dict of pd.DataFrame): dataframes in numeric dtype and more metrics
 
-        Also spits out a 'PV-A.csv' file if required.
+		Also spits out a 'PV-A.csv' file if required.
 
 
-    Needs:
-    -------------------------------
-        import pandas as pd
+	Needs:
+	-------------------------------
+		import pandas as pd
 
-    """
+	"""
 
 	# Convert numeric for circulation loops
 	df_circ = pv_a_dict['CIRCULATION LOOPS']
@@ -196,7 +196,7 @@ def post_process_pv_a(pv_a_dict, filename, output_to_csv=True):
 	df_dhw['Thermal Eff'] = 1 / df_dhw['HIR']
 
 	# Output to CSV
-	with open('{} PV-A.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} PV-A.csv'.format(filename), 'w') as f:
 		print('{} PV-A Report\n\n'.format(filename), file=f)
 		for k, v in pv_a_dict.items():
 			print(k, file=f)
@@ -208,22 +208,22 @@ def post_process_pv_a(pv_a_dict, filename, output_to_csv=True):
 
 def create_sv_a_dict():
 	"""
-    Initializes a dictionary of dataframes for the SV-A report
+	Initializes a dictionary of dataframes for the SV-A report
 
-    Args: None
-    ------
+	Args: None
+	------
 
-    Returns:
-    --------
-        sv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
-            the SV-A reports
-            Has three keys: 'Systems', 'Fans', 'Zones'
+	Returns:
+	--------
+		sv_a_dict(dict of pd.DataFrame): a dictionary of dataframes to collect
+			the SV-A reports
+			Has three keys: 'Systems', 'Fans', 'Zones'
 
-    Needs:
-    -------------------------------
-        import pandas as pd
+	Needs:
+	-------------------------------
+		import pandas as pd
 
-    """
+	"""
 
 	sv_a_dict = {}
 
@@ -280,29 +280,29 @@ def create_sv_a_dict():
 	return sv_a_dict
 
 
-def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
+def post_process_sv_a(sv_a_dict, filename):
 	"""
-    Convert the dataframe to numeric dtype
-    and calculates some efficiency metrics, such as Fan W/CFM
+	Convert the dataframe to numeric dtype
+	and calculates some efficiency metrics, such as Fan W/CFM
 
-    Args:
-    ------
-        sv_a_dict(dict pd.DataFrame): Dictionary of DataFrame with SV-A report data
+	Args:
+	------
+		sv_a_dict(dict pd.DataFrame): Dictionary of DataFrame with SV-A report data
 		filename(str): A string representing the filename of the CSV
-        output_to_csv (boolean): whether you want to output 'SV-A.csv'. Defaults True
+		output_to_csv (boolean): whether you want to output 'SV-A.csv'. Defaults True
 
-    Returns:
-    --------
-        system_info(pd.DataFrame): dataframe in numeric dtype and more metrics
+	Returns:
+	--------
+		system_info(pd.DataFrame): dataframe in numeric dtype and more metrics
 
-        Also spits out a 'SV-A.csv' file if required.
+		Also spits out a 'SV-A.csv' file if required.
 
 
-    Needs:
-    -------------------------------
-        import pandas as pd
+	Needs:
+	-------------------------------
+		import pandas as pd
 
-    """
+	"""
 
 	# Convert to numeric
 	sv_a_dict['Systems'].iloc[:, 1:] = sv_a_dict['Systems'].iloc[:, 1:].apply(lambda x: pd.to_numeric(x))
@@ -319,7 +319,7 @@ def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
 	sv_a_dict['Zones']['W/CFM'] = sv_a_dict['Zones']['Fan (kW)'] * 1000 / sv_a_dict['Zones']['Supply Flow (CFM)']
 
 	# Output to CSV
-	with open('{} SV-A.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} SV-A.csv'.format(filename), 'w') as f:
 		print('{} SV-A Report\n\n'.format(filename), file=f)
 		for k, v in sv_a_dict.items():
 			print(k, file=f)
@@ -331,20 +331,20 @@ def post_process_sv_a(sv_a_dict, filename, output_to_csv=True):
 
 def create_beps_dict():
 	'''
-    Initializes a dictioanry of dataframes for BEPS report
+	Initializes a dictioanry of dataframes for BEPS report
 
-    Args: None
-    -----
+	Args: None
+	-----
 
-    Returns:
-    -----
-        (dict of pd.DataFrame)
-            A dictionary of dataframes that corresponds to BEPS report
+	Returns:
+	-----
+		(dict of pd.DataFrame)
+			A dictionary of dataframes that corresponds to BEPS report
 
-    Requires:
-    -----
-        import pandas as pd
-    '''
+	Requires:
+	-----
+		import pandas as pd
+	'''
 	beps_dict = {}
 
 	##### BUILDING COMPONENTS
@@ -389,7 +389,7 @@ def create_beps_dict():
 	return beps_dict
 
 
-def post_process_beps(beps_dicts, filename, output_to_csv=True):
+def post_process_beps(beps_dicts, filename):
 	# TODO: Add post_process_beps documentation
 	# Convert to numeric
 	df_comp = beps_dicts['BUILDING COMPONENTS']
@@ -410,7 +410,7 @@ def post_process_beps(beps_dicts, filename, output_to_csv=True):
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Plant Load Unmet'] = load_percent
 
 	# Output to CSV
-	with open('{} BEPS.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} BEPS.csv'.format(filename), 'w') as f:
 		print('{} BEPS Report\n\n'.format(filename), file=f)
 		for k, v in beps_dicts.items():
 			print(k, file=f)
@@ -448,15 +448,14 @@ def create_ps_f_dict(list_of_meters):
 	return ps_f_dict
 
 
-def post_process_ps_f(ps_f_dict, filename, output_to_csv=True):
+def post_process_ps_f(ps_f_dict, filename):
 	# TODO: write PS-F documentation
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
 	# Output to CSV
-
-	with open('{} PS-F.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} PS-F.csv'.format(filename), 'w') as f:
 		print('{} PS-F Report\n\n'.format(filename), file=f)
 		for k, v in ps_f_dict.items():
 			print(k, file=f)
@@ -484,7 +483,7 @@ def find_in_header(f_list, pattern, report):
 	Requires
 	-----
 		None
-    '''
+	'''
 	all_finds = []
 
 	for i, line in enumerate(f_list):
@@ -521,11 +520,11 @@ def create_ss_a_dict(list_of_sys):
 	return ss_a_dict
 
 
-def post_process_ss_a(ss_a_dict, filename, output_to_csv=True):
+def post_process_ss_a(ss_a_dict, filename):
 	for k in ss_a_dict:
 		ss_a_dict[k] = ss_a_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	with open('{} SS-A.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} SS-A.csv'.format(filename), 'w') as f:
 		print('{} SS-A Report\n\n'.format(filename), file=f)
 		for k, v in ss_a_dict.items():
 			print(k, file=f)
@@ -552,11 +551,11 @@ def create_ss_b_dict(list_of_sys):
 	return ss_b_dict
 
 
-def post_process_ss_b(ss_b_dict, filename, output_to_csv=True):
+def post_process_ss_b(ss_b_dict, filename):
 	for k in ss_b_dict:
 		ss_b_dict[k] = ss_b_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	with open('{} SS-B.csv'.format(filename), 'w') as f:
+	with open('./{0}/{0} SS-B.csv'.format(filename), 'w') as f:
 		print('{} SS-B Report\n\n'.format(filename), file=f)
 		for k, v in ss_b_dict.items():
 			print(k, file=f)
@@ -566,34 +565,68 @@ def post_process_ss_b(ss_b_dict, filename, output_to_csv=True):
 	return ss_b_dict
 
 
-# TODO: Write LV-D dict
+def create_lv_d_dict():
+	lv_d_dict = {}
+	avg_u_cols = ['Avg Window U-value',
+	              'Avg Walls U-Value',
+	              'Avg Window+Walls U-Value',
+	              'Window Area (sqft)',
+	              'Wall Area (sqft)',
+	              'Win+Wall Area (sqft)']
+	avg_u_info = pd.DataFrame(columns=avg_u_cols)
+	avg_u_info.index.name = 'Surface'
+	lv_d_dict['Avg_U'] = avg_u_info
 
-# TODO: Write post_process_LV-D
+	return lv_d_dict
+
+
+def post_process_lv_d(lv_d_dict, filename):
+	df_avg_u = lv_d_dict['Avg_U']
+	df_avg_u = df_avg_u.apply(lambda x: pd.to_numeric(x))
+
+	# Calculate WWR
+	wwr = df_avg_u.loc['ALL WALLS', 'Window Area (sqft)'] / \
+	      df_avg_u.loc['ALL WALLS', 'Win+Wall Area (sqft)']
+
+	with open('./{0}/{0} LV-D.csv'.format(filename), 'w') as f:
+		print('{} LV-D Report\n\n'.format(filename), file=f)
+		for k, v in lv_d_dict.items():
+			print(k, file=f)
+			print('WWR%,{}'.format(wwr), file=f)
+			v.to_csv(f)
+			print('', file=f)
+
+	return lv_d_dict
 
 ### Parse Function ###
 
 def multi_sim():
 	filelist = gb.glob('./*.SIM')
-	if len(filelist) < 1:
-		raise Exception("No SIM file found. Please put your SIM files in the same directory as this.")
-		exit()
-	elif len(filelist) == 1:
-		proceed = input("I found 1 SIM file. Proceed with this? (Y/N): ")
-		if proceed in ['Y', 'y']:
-			return parse_sim(filelist[0])
-		else:
+	invalid_response = True
+	prompt = "I found {} SIM files. \nDo you want to process " \
+	         "all the SIM I found? (Y/N): ".format(len(filelist))
+	while invalid_response:
+		if len(filelist) < 1:
+			print("Warning: No SIM file found.\n"
+			      "Please put your SIM files in the same directory as this script.")
 			exit()
-	# TODO: Add batch process SIM Support
-	elif len(filelist) > 1:
-		proceed = input("I found {} SIM files. \nDo you want to process all the "
-		                "SIM I found? (Y/N): ".format(len(filelist)))
-		if proceed in ['N', 'n'] and len(filelist) != 1:
-			raise Exception("Too many SIM files found. Please only put the SIM you want to process")
-			exit()
-		elif proceed in ['Y', 'y']:
-			for file in filelist:
-				sim_path = file
-				parse_sim(sim_path)
+		elif len(filelist) >= 1:
+			proceed = input(prompt)
+			if len(filelist) == 1 and proceed in ['Y', 'y']:
+				parse_sim(filelist[0])
+				invalid_response = False
+			elif len(filelist) > 1 and proceed in ['Y', 'y']:
+				for file in filelist:
+					sim_path = file
+					parse_sim(sim_path)
+				invalid_response = False
+			elif proceed in ['N', 'n']:
+				print('Exiting....')
+				invalid_response = False
+			# something goes here
+			else:
+				print('Invalid Response. Please try again.')
+				continue
 
 
 def parse_sim(sim_path):
@@ -602,6 +635,7 @@ def parse_sim(sim_path):
 	with open(sim_path, encoding="Latin1") as f:
 		f_list = f.readlines()
 
+	filename = sim_path[2:-4]
 	### SVA ###
 	# Initializes a dictionary of dataframes to collect the SV-A report data
 	sv_a_dict = create_sv_a_dict()
@@ -617,11 +651,16 @@ def parse_sim(sim_path):
 	summ_pattern = '^\s{19}TOTAL'
 	unmet_pattern = '^\s{19}[PH]'
 
+	### LV-D ###
+	lv_d_dict = create_lv_d_dict()
+	surface_pattern = '^[\w-]+(?=\s{15,21}\d+)|(?<=\s{4})[\w+]+(?=\s+?\d+)|ALL WALLS'
+
+
 	### PS-F ###
 	ps_f_header_pattern = 'REPORT- PS-F Energy End-Use Summary for\s+((.*?))\s+WEATHER FILE'
 	list_of_meters = find_in_header(f_list, ps_f_header_pattern, 'PS-F')
 	ps_f_dict = create_ps_f_dict(list_of_meters)
-	month_pattern = '^\w{3}\\n'
+	month_pattern = '^\w{3}(?=\\n)'
 
 	### PV-A ###
 	pv_a_dict = create_pv_a_dict()
@@ -711,6 +750,17 @@ def parse_sim(sim_path):
 				if len(unmet_info) == 4:
 					beps_dict['UNMET INFO'].loc['Unmet'] = unmet_info
 
+		# Parsing LV-D
+		if current_report == 'LV-D' and len(l_list) > 0:
+			# Using search instead because match and lookbehind does not work at the beginning of a string
+			m = re.search(surface_pattern, line)
+			if m:
+				current_surface = m.group()
+				if current_surface == 'ALL WALLS':
+					lv_d_dict['Avg_U'].loc[current_surface] = l_list[2:]
+				else:
+					lv_d_dict['Avg_U'].loc[current_surface] = l_list[1:]
+
 		# Parsing PS-F
 		if current_report == 'PS-F' and len(l_list) > 0:
 			# Only split at 2 spaces or more so words like 'MAX KW' don't get split
@@ -721,7 +771,6 @@ def parse_sim(sim_path):
 			month_m = re.match(month_pattern, line)
 			if month_m:
 				current_month = month_m.group()
-				current_month = current_month.rstrip()
 
 			if psf_l_list[0] in ['KWH', 'MAX KW']:
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
@@ -746,11 +795,11 @@ def parse_sim(sim_path):
 		# Parsing SS-A
 		if current_report == 'SS-A' and len(l_list) > 0:
 
-			# logger.debug(l_list[0])
 			if l_list[0] in ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']:
 				ss_a_dict[current_sys].loc[l_list[0]] = l_list[1:]
 
 			elif l_list[0] == 'TOTAL':
+				# Empty list items to account for all the mismatched columns
 				total_list = [l_list[1]] + [''] * 5 + [l_list[2]] + [''] * 5 + [l_list[3]] + ['']
 				ss_a_dict[current_sys].loc[l_list[0]] = total_list
 			elif l_list[0] == 'MAX':
@@ -810,16 +859,19 @@ def parse_sim(sim_path):
 						print(i)
 						print(line)
 
-	sv_a_dict = post_process_sv_a(sv_a_dict, filename=sim_path, output_to_csv=True)
-	pv_a_dict = post_process_pv_a(pv_a_dict, filename=sim_path, output_to_csv=True)
-	beps_dict = post_process_beps(beps_dict, filename=sim_path, output_to_csv=True)
-	ps_f_dict = post_process_ps_f(ps_f_dict, filename=sim_path, output_to_csv=True)
-	ss_a_dict = post_process_ss_a(ss_a_dict, filename=sim_path, output_to_csv=True)
-	ss_b_dict = post_process_ss_b(ss_b_dict, filename=sim_path, output_to_csv=True)
+	foldername = "./{}/".format(filename)
+	os.makedirs(os.path.dirname(foldername), exist_ok=True)
+	sv_a_dict = post_process_sv_a(sv_a_dict, filename)
+	pv_a_dict = post_process_pv_a(pv_a_dict, filename)
+	beps_dict = post_process_beps(beps_dict, filename)
+	ps_f_dict = post_process_ps_f(ps_f_dict, filename)
+	ss_a_dict = post_process_ss_a(ss_a_dict, filename)
+	ss_b_dict = post_process_ss_b(ss_b_dict, filename)
+	lv_d_dict = post_process_lv_d(lv_d_dict, filename)
 
 	logger.info("All Done!")
 
-	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict
+	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict, lv_d_dict
 
 
 ### Main Function ###
