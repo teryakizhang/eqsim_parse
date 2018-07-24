@@ -1,3 +1,5 @@
+print('Parse SIM starting...looking for SIM files')
+
 import glob as gb
 import logging
 import os
@@ -24,6 +26,7 @@ ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+
 ### Parse Function ###
 
 def process_sim():
@@ -47,22 +50,31 @@ def process_sim():
 					parse_sim(sim_path)
 				invalid_response = False
 			elif proceed in ['N', 'n']:
-				print('Exiting....')
-				invalid_response = False
+				# print('Exiting....')
+				exit('User Terminated')
 			# something goes here
-			elif re.search('[Ww]aterloo', proceed):
-				answer = "\nAny. A MURB can't jump\nMade by Terry Zhang 2018\nt-zhang@hotmail.com"
-				joke = input('Not an easter egg, just a joke\nWhat animal can jump higher than a '
-				             'MURB? (no clue/an animal): ')
-				if re.search('no', joke):
-					print(answer)
-				else:
-					print('\nClose...the answer is... ' + answer)
-			elif re.search('[Ll]aurier', proceed):
-				print('Good highschool!')
 			else:
 				print('Invalid Response. Please try again.')
 				continue
+	# CSV Aggregating option
+	invalid_response = True
+	agg_prompt = "Do you want to aggregate all the CSVs into 1 Excel file? (Y/N): "
+	agg_proceed = input(agg_prompt)
+	while invalid_response:
+		if agg_proceed in ['Y', 'y']:
+			for file in filelist:
+				filename = file[2:-4]
+				pim.aggregate_csv(filename)
+			print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
+			invalid_response = False
+		elif agg_proceed in ['N', 'n']:
+			print('No CSV aggregation, continuing...\n')
+			invalid_response = False
+		else:
+			print('Invalid Response. Please try again.')
+			continue
+
+	input('All Done! Press ENTER to exit')
 
 
 def parse_sim(sim_path):
@@ -297,6 +309,7 @@ def parse_sim(sim_path):
 
 	foldername = "./{}/".format(filename)
 	os.makedirs(os.path.dirname(foldername), exist_ok=True)
+
 	sv_a_dict = pim.post_process_sv_a(sv_a_dict, filename)
 	pv_a_dict = pim.post_process_pv_a(pv_a_dict, filename)
 	beps_dict = pim.post_process_beps(beps_dict, filename)
@@ -305,10 +318,36 @@ def parse_sim(sim_path):
 	ss_b_dict = pim.post_process_ss_b(ss_b_dict, filename)
 	lv_d_dict = pim.post_process_lv_d(lv_d_dict, filename)
 
-	logger.info("All Done!")
+	logger.info("Parsing {} Done!".format(filename))
 
 	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict, lv_d_dict
 
+
+def infiltration(sim_path):
+	# TODO: write infiltration parse
+	logging.info('Loading{} for infiltration'.format(sim_path))
+
+	with open(sim_path, encoding="Latin1") as f:
+		f_list = f.readlines()
+
+	filename = sim_path[2:-4]
+
+	### Infiltration ###
+	# Initializes a dictionary of dataframes to collect infiltration data
+	infil_dict = pim.create_infil_dict()
+	space_pattern = r'(?<=\s{2}in\sspace:\s)[\w\s()-]+?(?=\s+)'
+	current_surface = None
+	current_space = None
+
+	### Infiltration Parsing ###
+	for i, line in enumerate(f_list):
+		l_list = line.split()
+		if len(l_list) > 1:
+			if l_list[0] == "REPORT-":
+				current_report = l_list[1]
+
+				if current_report == 'LV-D':
+					pass
 
 ### Main Function ###
 

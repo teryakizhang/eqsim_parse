@@ -5,8 +5,10 @@
 import re
 
 import pandas as pd
+import xlsxwriter
 
 
+### Process SIM functions ###
 def create_pv_a_dict():
 	"""
 	Initializes a dictionary of dataframes for the PV-A report
@@ -551,6 +553,7 @@ def post_process_ss_b(ss_b_dict, filename):
 
 def create_lv_d_dict():
 	lv_d_dict = {}
+
 	avg_u_cols = ['Avg Window U-value',
 	              'Avg Walls U-Value',
 	              'Avg Window+Walls U-Value',
@@ -581,3 +584,58 @@ def post_process_lv_d(lv_d_dict, filename):
 			print('', file=f)
 
 	return lv_d_dict
+
+
+def create_infil_dict():
+	'''Creates a dictionary with all the necessary information to calculate infiltration'''
+	infil_dict = {}
+
+	ext_surfaces_cols = ['Win U-Value',
+	                     'Win Area (Sqft)',
+	                     'Wall U-Value',
+	                     'Wall Area (Sqft)',
+	                     'Win+Wall U- Value',
+	                     'Win+Wall Area',
+	                     'Azimuth']
+
+	ext_surfaces_info = pd.DataFrame(columns=ext_surfaces_cols)
+	ext_surfaces_info.index.name = 'Surface'
+	infil_dict['Ext Surfaces'] = ext_surfaces_info
+
+	lv_b_cols = ['Multiplier', 'Floor Area (sqft)']
+	lv_b_info = pd.DataFrame(columns=lv_b_cols)
+	lv_b_info.index.name = 'Space'
+
+	infil_dict['Space'] = lv_b_info
+
+	return infil_dict
+
+
+def post_process_infil(infil_dict, filename):
+	# TODO: Write post process infiltration
+	infil_dict['Ext Surfaces'] = infil_dict['Ext Surfaces'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
+
+	infil_dict['Space'] = infil_dict['Space'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
+
+	with open('./{0}/{0} Infiltration.csv'.format(filename), 'w') as f:
+		print('{} Infiltration\n\n'.format(filename), file=f)
+		for k, v in ss_b_dict.items():
+			print(k, file=f)
+			v.to_csv(f)
+			print('', file=f)
+
+
+def aggregate_csv(foldername):
+	workbook = xlsxwriter.Workbook('./{0}/{0} Master.xlsm'.format(foldername))
+	worksheet = workbook.add_worksheet()
+	worksheet.set_column('A:A', 30)
+	try:
+		workbook.add_vba_project('./data/vbaProject.bin')
+	except OSError as err:
+		print("OS error: {}".format(err))
+	worksheet.write('A1', "Press button to select the files you'd like to aggregate")
+	worksheet.insert_button('B1', {'macro': 'CombineCsvFiles',
+	                               'caption': 'Press Me',
+	                               'Width': 80,
+	                               'height': 30})
+	workbook.close()
