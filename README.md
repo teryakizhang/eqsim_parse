@@ -1,5 +1,5 @@
 # eqsim_parse
-Extract and process certain important information from eQuest simlation output file (SIM).
+Extract and process certain important information from eQuest simlation output file (SIM). The basis of the code is pulled from [jmarrec's eQSimParsing](https://github.com/jmarrec/eQSimParsing). 
 
 
 ### Installation
@@ -7,7 +7,7 @@ The following installations and commands will be necessary before the script is 
 
 This script requires [Python](https://www.python.org/) V3+ to run. Make sure you have it installed first.
 
-Compatible version: Python 3.7
+Compatible version: Python 3.6+
 
 Following are commands to run in your command prompt to install the dependencies.
 ```
