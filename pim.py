@@ -104,7 +104,7 @@ def create_pv_a_dict():
 	return pv_a_dict
 
 
-def post_process_pv_a(pv_a_dict, filename):
+def post_process_pv_a(pv_a_dict, filename, sim_folder):
 	"""
 	Convert the dataframes in the dictionary to numeric dtype
 	and calculates some efficiency metrics, such as Chiller COP, Pump kW/GPM, etc.
@@ -181,8 +181,12 @@ def post_process_pv_a(pv_a_dict, filename):
 	df_dhw[num_cols] = df_dhw[num_cols].apply(lambda x: pd.to_numeric(x))
 	df_dhw['Thermal Eff'] = 1 / df_dhw['HIR']
 
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './PV-A'
+
 	# Output to CSV
-	with open('./{0}/{0} PV-A.csv'.format(filename), 'w') as f:
+	with open(folder_name + '/{0} PV-A.csv'.format(filename), 'w') as f:
 		print('{} PV-A Report\n\n'.format(filename), file=f)
 		for k, v in pv_a_dict.items():
 			print(k, file=f)
@@ -266,7 +270,7 @@ def create_sv_a_dict():
 	return sv_a_dict
 
 
-def post_process_sv_a(sv_a_dict, filename):
+def post_process_sv_a(sv_a_dict, filename, sim_folder):
 	"""
 	Convert the dataframe to numeric dtype
 	and calculates some efficiency metrics, such as Fan W/CFM
@@ -304,8 +308,12 @@ def post_process_sv_a(sv_a_dict, filename):
 	sv_a_dict['Fans']['W/CFM'] = sv_a_dict['Fans']['Power Demand (kW)'] * 1000 / sv_a_dict['Fans']['Capacity (CFM)']
 	sv_a_dict['Zones']['W/CFM'] = sv_a_dict['Zones']['Fan (kW)'] * 1000 / sv_a_dict['Zones']['Supply Flow (CFM)']
 
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './SV-A'
+
 	# Output to CSV
-	with open('./{0}/{0} SV-A.csv'.format(filename), 'w') as f:
+	with open(folder_name + '/{0} SV-A.csv'.format(filename), 'w') as f:
 		print('{} SV-A Report\n\n'.format(filename), file=f)
 		for k, v in sv_a_dict.items():
 			print(k, file=f)
@@ -434,14 +442,19 @@ def create_ps_f_dict(list_of_meters):
 	return ps_f_dict
 
 
-def post_process_ps_f(ps_f_dict, filename):
+def post_process_ps_f(ps_f_dict, filename, sim_folder):
 	# TODO: write PS-F documentation
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 		ps_f_dict[k] = ps_f_dict[k].T
+
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './PS-F'
+
 	# Output to CSV
-	with open('./{0}/{0} PS-F.csv'.format(filename), 'w') as f:
+	with open(folder_name + '/{0} PS-F.csv'.format(filename), 'w') as f:
 		print('{} PS-F Report\n\n'.format(filename), file=f)
 		for k, v in ps_f_dict.items():
 			print(k, file=f)
@@ -506,11 +519,15 @@ def create_ss_a_dict(list_of_sys):
 	return ss_a_dict
 
 
-def post_process_ss_a(ss_a_dict, filename):
+def post_process_ss_a(ss_a_dict, filename, sim_folder):
 	for k in ss_a_dict:
 		ss_a_dict[k] = ss_a_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	with open('./{0}/{0} SS-A.csv'.format(filename), 'w') as f:
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './SS-A'
+
+	with open(folder_name + '/{0} SS-A.csv'.format(filename), 'w') as f:
 		print('{} SS-A Report\n\n'.format(filename), file=f)
 		for k, v in ss_a_dict.items():
 			print(k, file=f)
@@ -537,11 +554,15 @@ def create_ss_b_dict(list_of_sys):
 	return ss_b_dict
 
 
-def post_process_ss_b(ss_b_dict, filename):
+def post_process_ss_b(ss_b_dict, filename, sim_folder):
 	for k in ss_b_dict:
 		ss_b_dict[k] = ss_b_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	with open('./{0}/{0} SS-B.csv'.format(filename), 'w') as f:
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './SS-B'
+
+	with open(folder_name + '/{0} SS-B.csv'.format(filename), 'w') as f:
 		print('{} SS-B Report\n\n'.format(filename), file=f)
 		for k, v in ss_b_dict.items():
 			print(k, file=f)
@@ -567,7 +588,7 @@ def create_lv_d_dict():
 	return lv_d_dict
 
 
-def post_process_lv_d(lv_d_dict, filename):
+def post_process_lv_d(lv_d_dict, filename, sim_folder):
 	df_avg_u = lv_d_dict['Avg_U']
 	df_avg_u = df_avg_u.apply(lambda x: pd.to_numeric(x))
 
@@ -575,7 +596,11 @@ def post_process_lv_d(lv_d_dict, filename):
 	wwr = df_avg_u.loc['ALL WALLS', 'Window Area (sqft)'] / \
 	      df_avg_u.loc['ALL WALLS', 'Win+Wall Area (sqft)']
 
-	with open('./{0}/{0} LV-D.csv'.format(filename), 'w') as f:
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './LV-D'
+
+	with open(folder_name + '{0} LV-D.csv'.format(filename), 'w') as f:
 		print('{} LV-D Report\n\n'.format(filename), file=f)
 		for k, v in lv_d_dict.items():
 			print(k, file=f)
@@ -611,13 +636,17 @@ def create_infil_dict():
 	return infil_dict
 
 
-def post_process_infil(infil_dict, filename):
+def post_process_infil(infil_dict, filename, sim_folder):
 	# TODO: Write post process infiltration
 	infil_dict['Ext Surfaces'] = infil_dict['Ext Surfaces'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
 	infil_dict['Space'] = infil_dict['Space'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	with open('./{0}/{0} Infiltration.csv'.format(filename), 'w') as f:
+	folder_name = './{0}'  # default project specific folder
+	if sim_folder:
+		folder_name = './SV-A'
+
+	with open(folder_name + '/{0} Infiltration.csv'.format(filename), 'w') as f:
 		print('{} Infiltration\n\n'.format(filename), file=f)
 		for k, v in ss_b_dict.items():
 			print(k, file=f)

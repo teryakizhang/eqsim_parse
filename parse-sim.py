@@ -31,22 +31,31 @@ logger.addHandler(ch)
 def process_sim():
 	filelist = gb.glob('./*.SIM')
 	invalid_response = True
+	folder_invalid_response = True
 	prompt = "I found {} SIM files. \nDo you want to process " \
 	         "all the SIM I found? (Y/N): ".format(len(filelist))
-	while invalid_response:
+	folder_prompt = "Do you want to output to SIM report specific folders? \n" \
+	                "Such as /BEPS/project.csv (good for batch benchmarking) (Y/N): "
+	while invalid_response or folder_invalid_response:
 		if len(filelist) < 1:
 			print("Warning: No SIM file found.\n"
 			      "Please put your SIM files in the same directory as this script.")
 			exit()
 		elif len(filelist) >= 1:
+			# TODO: finish adding report_folder prompt
 			proceed = input(prompt)
-			if len(filelist) == 1 and proceed in ['Y', 'y']:
-				parse_sim(filelist[0])
-				invalid_response = False
-			elif len(filelist) > 1 and proceed in ['Y', 'y']:
+			sim_folder = input(folder_prompt)
+			if sim_folder in ['Y', 'y']:
+				sim_folder = True
+			else:
+				sim_folder = False
+			# if len(filelist) == 1 and proceed in ['Y', 'y']:
+			# 	parse_sim(filelist[0])
+			# 	invalid_response = False
+			if len(filelist) > 1 and proceed in ['Y', 'y']:
 				for file in filelist:
 					sim_path = file
-					parse_sim(sim_path)
+					parse_sim(sim_path, sim_folder)
 				invalid_response = False
 			elif proceed in ['N', 'n']:
 				# print('Exiting....')
@@ -76,7 +85,7 @@ def process_sim():
 	input('All Done! Press ENTER to exit')
 
 
-def parse_sim(sim_path):
+def parse_sim(sim_path, sim_folder=False):
 	logging.info('Loading{}'.format(sim_path))
 
 	with open(sim_path, encoding="Latin1") as f:
@@ -319,13 +328,13 @@ def parse_sim(sim_path):
 	foldername = "./{}/".format(filename)
 	os.makedirs(os.path.dirname(foldername), exist_ok=True)
 
-	sv_a_dict = pim.post_process_sv_a(sv_a_dict, filename)
-	pv_a_dict = pim.post_process_pv_a(pv_a_dict, filename)
-	beps_dict = pim.post_process_beps(beps_dict, filename)
-	ps_f_dict = pim.post_process_ps_f(ps_f_dict, filename)
-	ss_a_dict = pim.post_process_ss_a(ss_a_dict, filename)
-	ss_b_dict = pim.post_process_ss_b(ss_b_dict, filename)
-	lv_d_dict = pim.post_process_lv_d(lv_d_dict, filename)
+	sv_a_dict = pim.post_process_sv_a(sv_a_dict, filename, sim_folder)
+	pv_a_dict = pim.post_process_pv_a(pv_a_dict, filename, sim_folder)
+	beps_dict = pim.post_process_beps(beps_dict, filename, sim_folder)
+	ps_f_dict = pim.post_process_ps_f(ps_f_dict, filename, sim_folder)
+	ss_a_dict = pim.post_process_ss_a(ss_a_dict, filename, sim_folder)
+	ss_b_dict = pim.post_process_ss_b(ss_b_dict, filename, sim_folder)
+	lv_d_dict = pim.post_process_lv_d(lv_d_dict, filename, sim_folder)
 
 	logger.info("Parsing {} Done!".format(filename))
 
