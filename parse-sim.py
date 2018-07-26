@@ -26,7 +26,6 @@ ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-
 ### Parse Function ###
 
 def process_sim():
@@ -59,8 +58,8 @@ def process_sim():
 	# CSV Aggregating option
 	invalid_response = True
 	agg_prompt = "Do you want to aggregate all the CSVs into 1 Excel file? (Y/N): "
-	agg_proceed = input(agg_prompt)
 	while invalid_response:
+		agg_proceed = input(agg_prompt)
 		if agg_proceed in ['Y', 'y']:
 			for file in filelist:
 				filename = file[2:-4]
@@ -103,12 +102,12 @@ def parse_sim(sim_path):
 	lv_d_dict = pim.create_lv_d_dict()
 	surface_pattern = '^[\w-]+(?=\s{15,21}\d+)|(?<=\s{4})[\w+]+(?=\s+?\d+)|ALL WALLS'
 
-
 	### PS-F ###
 	ps_f_header_pattern = 'REPORT- PS-F Energy End-Use Summary for\s+((.*?))\s+WEATHER FILE'
 	list_of_meters = pim.find_in_header(f_list, ps_f_header_pattern, 'PS-F')
 	ps_f_dict = pim.create_ps_f_dict(list_of_meters)
-	month_pattern = '^\w{3}(?=\\n)'
+	current_month = None
+	month_pattern = '^\w{3}(?=\\n)|(?<=\s{14})[=]{7}'
 
 	### PV-A ###
 	pv_a_dict = pim.create_pv_a_dict()
@@ -193,7 +192,7 @@ def parse_sim(sim_path):
 			m3 = re.match(unmet_pattern, line)
 			if m3:
 				if len(unmet_info) < 4:
-					unmet_info.append(l_list[-1])
+					unmet_info.append(l_list[-1].strip('='))
 
 				if len(unmet_info) == 4:
 					beps_dict['UNMET INFO'].loc['Unmet'] = unmet_info
@@ -214,18 +213,26 @@ def parse_sim(sim_path):
 			# Only split at 2 spaces or more so words like 'MAX KW' don't get split
 			psf_l_list = re.split(r'\s{2,}', line)
 			measure_dict = {'KWH': 'KWH', 'MAX KW': 'Max KW', 'PEAK ENDUSE': 'Peak End Use', 'PEAK PCT': 'Peak Pct',
-			                'MAX THERM/HR': 'Max Therm/Hr', 'THERM': 'Therm'}
+			                'MAX THERM/HR': 'Max Therm/Hr', 'THERM': 'Therm', 'MON/DY': 'Mon/Day', 'DAY/HR': 'Day/Hour'}
 			# Match current month
-			month_m = re.match(month_pattern, line)
+			month_m = re.search(month_pattern, line)
 			if month_m:
 				current_month = month_m.group()
+				if current_month == '=======':
+					current_month = 'TOTAL'
+					index = ps_f_dict[current_meter].index
+					names = index.names
+					index = ps_f_dict[current_meter].index.tolist()
+					index[-3] = ('TOTAL', 'Mon/Day')
+					ps_f_dict[current_meter].index = pd.MultiIndex.from_tuples(index, names=names)
 
 			if psf_l_list[0] in ['KWH', 'MAX KW']:
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
 			elif psf_l_list[0] in ['THERM', 'MAX THERM/HR']:
 				df = ps_f_dict[current_meter]
-				new_index = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+				new_index = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+				              'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'TOTAL'],
 				             ['Therm', 'Max Therm/Hr', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
 				df.index = pd.MultiIndex.from_product(new_index, names=[u'Month', u'Measure'])
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
@@ -236,9 +243,11 @@ def parse_sim(sim_path):
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = l_list[-13:]
 
 			# This measure has values with a slash followed by a space, requires psf_l_list
-			elif psf_l_list[0] == 'DAY/HR':
+			elif psf_l_list[0] in ['DAY/HR', 'MON/DY']:
 				psf_l_list[-1] = psf_l_list[-1].rstrip('\n')
-				ps_f_dict[current_meter].loc[(current_month, 'Day/Hour'), :] = psf_l_list[-13:]
+				proper_date = ["'" + date for date in psf_l_list[-13:]]
+				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = proper_date
+
 
 		# Parsing SS-A
 		if current_report == 'SS-A' and len(l_list) > 0:
@@ -348,6 +357,7 @@ def infiltration(sim_path):
 
 				if current_report == 'LV-D':
 					pass
+
 
 ### Main Function ###
 

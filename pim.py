@@ -424,7 +424,7 @@ def create_ps_f_dict(list_of_meters):
 	                       'DHW',
 	                       'Ext Usage',
 	                       'Total']
-	ind_list = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+	ind_list = [['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'TOTAL'],
 	            ['KWH', 'Max KW', 'Day/Hour', 'Peak End Use', 'Peak Pct']]
 	index = pd.MultiIndex.from_product(ind_list, names=[u'Month', u'Measure'])
 	# Creates a dictionary item for each meter
@@ -439,7 +439,7 @@ def post_process_ps_f(ps_f_dict, filename):
 	# Convert to numeric, will ignore day/hour
 	for k in ps_f_dict:
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
-
+		ps_f_dict[k] = ps_f_dict[k].T
 	# Output to CSV
 	with open('./{0}/{0} PS-F.csv'.format(filename), 'w') as f:
 		print('{} PS-F Report\n\n'.format(filename), file=f)
