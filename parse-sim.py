@@ -31,39 +31,54 @@ logger.addHandler(ch)
 def process_sim():
 	filelist = gb.glob('./*.SIM')
 	invalid_response = True
-	folder_invalid_response = True
 	prompt = "I found {} SIM files. \nDo you want to process " \
 	         "all the SIM I found? (Y/N): ".format(len(filelist))
-	folder_prompt = "Do you want to output to SIM report specific folders? \n" \
-	                "Such as /BEPS/project.csv (good for batch benchmarking) (Y/N): "
-	while invalid_response or folder_invalid_response:
-		if len(filelist) < 1:
-			print("Warning: No SIM file found.\n"
-			      "Please put your SIM files in the same directory as this script.")
-			exit()
-		elif len(filelist) >= 1:
-			# TODO: finish adding report_folder prompt
-			proceed = input(prompt)
+
+	# Folder option
+	def sim_folder():
+		folder_prompt = "Do you want to output to SIM report specific folders? \n" \
+		                "Such as /BEPS/project.csv (good for batch benchmarking) (Y/N): "
+		folder_invalid_response = True
+		while folder_invalid_response:
 			sim_folder = input(folder_prompt)
 			if sim_folder in ['Y', 'y']:
 				sim_folder = True
-			else:
+				folder_invalid_response = False
+			elif sim_folder in ['N', 'n']:
+				logger.info('Continuing with default folder')
 				sim_folder = False
+				folder_invalid_response = False
+			else:
+				logger.warning('Invalid Response. Please try again.')
+				continue
+		return sim_folder
+
+	# Parse SIM
+	while invalid_response:
+		if len(filelist) < 1:
+			logger.warning("Warning: No SIM file found.\n" \
+			               "Please put your SIM files in the same directory as this script.")
+			exit()
+		elif len(filelist) >= 1:
+			proceed = input(prompt)
 			# if len(filelist) == 1 and proceed in ['Y', 'y']:
 			# 	parse_sim(filelist[0])
 			# 	invalid_response = False
-			if len(filelist) > 1 and proceed in ['Y', 'y']:
+			if proceed in ['Y', 'y']:
+				sim_folder = sim_folder()
 				for file in filelist:
 					sim_path = file
 					parse_sim(sim_path, sim_folder)
 				invalid_response = False
 			elif proceed in ['N', 'n']:
 				# print('Exiting....')
+				logger.info('Exiting.....')
 				exit('User Terminated')
 			# something goes here
 			else:
-				print('Invalid Response. Please try again.')
+				logger.warning('Invalid Response. Please try again.')
 				continue
+
 	# CSV Aggregating option
 	invalid_response = True
 	agg_prompt = "Do you want to aggregate all the CSVs into 1 Excel file? (Y/N): "
@@ -72,7 +87,11 @@ def process_sim():
 		if agg_proceed in ['Y', 'y']:
 			for file in filelist:
 				filename = file[2:-4]
-				pim.aggregate_csv(filename)
+				try:
+					pim.aggregate_csv(filename)
+				except OSError as err:  # fixme: Does not account for SIM report folders
+					logger.error('OS Error:{}'.format(err))
+					continue
 			print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
 			invalid_response = False
 		elif agg_proceed in ['N', 'n']:
@@ -325,8 +344,14 @@ def parse_sim(sim_path, sim_folder=False):
 						print(i)
 						print(line)
 
-	foldername = "./{}/".format(filename)
-	os.makedirs(os.path.dirname(foldername), exist_ok=True)
+	if sim_folder:
+		folder_name = ['/BEPS/', '/PV-A/', '/SV-A/', '/PS-F/', '/SS-A/', '/SS-B/', '/LV-D/']
+		for folder in folder_name:
+			folder = './Parse-SIM output' + folder
+			os.makedirs(os.path.dirname(folder), exist_ok=True)
+	else:
+		folder_name = "./{}/".format(filename)
+		os.makedirs(os.path.dirname(folder_name), exist_ok=True)
 
 	sv_a_dict = pim.post_process_sv_a(sv_a_dict, filename, sim_folder)
 	pv_a_dict = pim.post_process_pv_a(pv_a_dict, filename, sim_folder)

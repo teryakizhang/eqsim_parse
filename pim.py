@@ -181,9 +181,9 @@ def post_process_pv_a(pv_a_dict, filename, sim_folder):
 	df_dhw[num_cols] = df_dhw[num_cols].apply(lambda x: pd.to_numeric(x))
 	df_dhw['Thermal Eff'] = 1 / df_dhw['HIR']
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './PV-A'
+		folder_name = './Parse-SIM output/PV-A'
 
 	# Output to CSV
 	with open(folder_name + '/{0} PV-A.csv'.format(filename), 'w') as f:
@@ -308,9 +308,9 @@ def post_process_sv_a(sv_a_dict, filename, sim_folder):
 	sv_a_dict['Fans']['W/CFM'] = sv_a_dict['Fans']['Power Demand (kW)'] * 1000 / sv_a_dict['Fans']['Capacity (CFM)']
 	sv_a_dict['Zones']['W/CFM'] = sv_a_dict['Zones']['Fan (kW)'] * 1000 / sv_a_dict['Zones']['Supply Flow (CFM)']
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './SV-A'
+		folder_name = './Parse-SIM output/SV-A'
 
 	# Output to CSV
 	with open(folder_name + '/{0} SV-A.csv'.format(filename), 'w') as f:
@@ -383,7 +383,7 @@ def create_beps_dict():
 	return beps_dict
 
 
-def post_process_beps(beps_dicts, filename):
+def post_process_beps(beps_dicts, filename, sim_folder):
 	# TODO: Add post_process_beps documentation
 	# Convert to numeric
 	df_comp = beps_dicts['BUILDING COMPONENTS']
@@ -403,8 +403,12 @@ def post_process_beps(beps_dicts, filename):
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Outside Throttling Range'] = zone_percent
 	beps_dicts['UNMET INFO'].at['Unmet', '% of Hours Plant Load Unmet'] = load_percent
 
+	folder_name = './{0}'.format(filename)  # default project specific folder
+	if sim_folder:
+		folder_name = './Parse-SIM output/BEPS'
+
 	# Output to CSV
-	with open('./{0}/{0} BEPS.csv'.format(filename), 'w') as f:
+	with open(folder_name + '/{0} BEPS.csv'.format(filename), 'w') as f:
 		print('{} BEPS Report\n\n'.format(filename), file=f)
 		for k, v in beps_dicts.items():
 			print(k, file=f)
@@ -449,9 +453,9 @@ def post_process_ps_f(ps_f_dict, filename, sim_folder):
 		ps_f_dict[k] = ps_f_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 		ps_f_dict[k] = ps_f_dict[k].T
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './PS-F'
+		folder_name = './Parse-SIM output/PS-F'
 
 	# Output to CSV
 	with open(folder_name + '/{0} PS-F.csv'.format(filename), 'w') as f:
@@ -523,9 +527,9 @@ def post_process_ss_a(ss_a_dict, filename, sim_folder):
 	for k in ss_a_dict:
 		ss_a_dict[k] = ss_a_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './SS-A'
+		folder_name = './Parse-SIM output/SS-A'
 
 	with open(folder_name + '/{0} SS-A.csv'.format(filename), 'w') as f:
 		print('{} SS-A Report\n\n'.format(filename), file=f)
@@ -558,9 +562,9 @@ def post_process_ss_b(ss_b_dict, filename, sim_folder):
 	for k in ss_b_dict:
 		ss_b_dict[k] = ss_b_dict[k].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './SS-B'
+		folder_name = './Parse-SIM output/SS-B'
 
 	with open(folder_name + '/{0} SS-B.csv'.format(filename), 'w') as f:
 		print('{} SS-B Report\n\n'.format(filename), file=f)
@@ -596,11 +600,11 @@ def post_process_lv_d(lv_d_dict, filename, sim_folder):
 	wwr = df_avg_u.loc['ALL WALLS', 'Window Area (sqft)'] / \
 	      df_avg_u.loc['ALL WALLS', 'Win+Wall Area (sqft)']
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './LV-D'
+		folder_name = './Parse-SIM output/LV-D'
 
-	with open(folder_name + '{0} LV-D.csv'.format(filename), 'w') as f:
+	with open(folder_name + '/{0} LV-D.csv'.format(filename), 'w') as f:
 		print('{} LV-D Report\n\n'.format(filename), file=f)
 		for k, v in lv_d_dict.items():
 			print(k, file=f)
@@ -642,9 +646,9 @@ def post_process_infil(infil_dict, filename, sim_folder):
 
 	infil_dict['Space'] = infil_dict['Space'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	folder_name = './{0}'  # default project specific folder
+	folder_name = './{0}'.format(filename)  # default project specific folder
 	if sim_folder:
-		folder_name = './SV-A'
+		folder_name = './Parse-SIM output/SV-A'
 
 	with open(folder_name + '/{0} Infiltration.csv'.format(filename), 'w') as f:
 		print('{} Infiltration\n\n'.format(filename), file=f)
