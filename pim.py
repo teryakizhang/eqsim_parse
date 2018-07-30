@@ -658,8 +658,11 @@ def post_process_infil(infil_dict, filename, sim_folder):
 			print('', file=f)
 
 
-def aggregate_csv(foldername):
-	workbook = xlsxwriter.Workbook('./{0}/{0} Master.xlsm'.format(foldername))
+def aggregate_csv(foldername, sim_folder=False):
+	folder_name = './{0}'.format(foldername)  # default project specific folder
+	if sim_folder:
+		folder_name = './Parse-SIM output/{0}'.format(foldername)
+	workbook = xlsxwriter.Workbook(folder_name + '/{0} Master.xlsm'.format(foldername))
 	worksheet = workbook.add_worksheet()
 	worksheet.set_column('A:A', 30)
 	try:
