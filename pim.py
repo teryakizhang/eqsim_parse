@@ -2,10 +2,13 @@
 ########  Process SIM Module ########
 #####################################
 
+import logging
 import re
 
 import pandas as pd
 import xlsxwriter
+
+logger = logging.getLogger()
 
 
 ### Process SIM functions ###
@@ -186,12 +189,15 @@ def post_process_pv_a(pv_a_dict, filename, sim_folder):
 		folder_name = './Parse-SIM output/PV-A'
 
 	# Output to CSV
-	with open(folder_name + '/{0} PV-A.csv'.format(filename), 'w') as f:
-		print('{} PV-A Report\n\n'.format(filename), file=f)
-		for k, v in pv_a_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} PV-A.csv'.format(filename), 'w') as f:
+			print('{} PV-A Report\n\n'.format(filename), file=f)
+			for k, v in pv_a_dict.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return pv_a_dict
 
@@ -313,12 +319,15 @@ def post_process_sv_a(sv_a_dict, filename, sim_folder):
 		folder_name = './Parse-SIM output/SV-A'
 
 	# Output to CSV
-	with open(folder_name + '/{0} SV-A.csv'.format(filename), 'w') as f:
-		print('{} SV-A Report\n\n'.format(filename), file=f)
-		for k, v in sv_a_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} SV-A.csv'.format(filename), 'w') as f:
+			print('{} SV-A Report\n\n'.format(filename), file=f)
+			for k, v in sv_a_dict.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return sv_a_dict
 
@@ -408,12 +417,15 @@ def post_process_beps(beps_dicts, filename, sim_folder):
 		folder_name = './Parse-SIM output/BEPS'
 
 	# Output to CSV
-	with open(folder_name + '/{0} BEPS.csv'.format(filename), 'w') as f:
-		print('{} BEPS Report\n\n'.format(filename), file=f)
-		for k, v in beps_dicts.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} BEPS.csv'.format(filename), 'w') as f:
+			print('{} BEPS Report\n\n'.format(filename), file=f)
+			for k, v in beps_dicts.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return beps_dicts
 
@@ -458,12 +470,15 @@ def post_process_ps_f(ps_f_dict, filename, sim_folder):
 		folder_name = './Parse-SIM output/PS-F'
 
 	# Output to CSV
-	with open(folder_name + '/{0} PS-F.csv'.format(filename), 'w') as f:
-		print('{} PS-F Report\n\n'.format(filename), file=f)
-		for k, v in ps_f_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} PS-F.csv'.format(filename), 'w') as f:
+			print('{} PS-F Report\n\n'.format(filename), file=f)
+			for k, v in ps_f_dict.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return ps_f_dict
 
@@ -531,12 +546,15 @@ def post_process_ss_a(ss_a_dict, filename, sim_folder):
 	if sim_folder:
 		folder_name = './Parse-SIM output/SS-A'
 
-	with open(folder_name + '/{0} SS-A.csv'.format(filename), 'w') as f:
-		print('{} SS-A Report\n\n'.format(filename), file=f)
-		for k, v in ss_a_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} SS-A.csv'.format(filename), 'w') as f:
+			print('{} SS-A Report\n\n'.format(filename), file=f)
+			for k, v in ss_a_dict.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return ss_a_dict
 
@@ -566,12 +584,15 @@ def post_process_ss_b(ss_b_dict, filename, sim_folder):
 	if sim_folder:
 		folder_name = './Parse-SIM output/SS-B'
 
-	with open(folder_name + '/{0} SS-B.csv'.format(filename), 'w') as f:
-		print('{} SS-B Report\n\n'.format(filename), file=f)
-		for k, v in ss_b_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} SS-B.csv'.format(filename), 'w') as f:
+			print('{} SS-B Report\n\n'.format(filename), file=f)
+			for k, v in ss_b_dict.items():
+				print(k, file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return ss_b_dict
 
@@ -604,13 +625,16 @@ def post_process_lv_d(lv_d_dict, filename, sim_folder):
 	if sim_folder:
 		folder_name = './Parse-SIM output/LV-D'
 
-	with open(folder_name + '/{0} LV-D.csv'.format(filename), 'w') as f:
-		print('{} LV-D Report\n\n'.format(filename), file=f)
-		for k, v in lv_d_dict.items():
-			print(k, file=f)
-			print('WWR%,{}'.format(wwr), file=f)
-			v.to_csv(f)
-			print('', file=f)
+	try:
+		with open(folder_name + '/{0} LV-D.csv'.format(filename), 'w') as f:
+			print('{} LV-D Report\n\n'.format(filename), file=f)
+			for k, v in lv_d_dict.items():
+				print(k, file=f)
+				print('WWR%,{}'.format(wwr), file=f)
+				v.to_csv(f)
+				print('', file=f)
+	except OSError as err:
+		logger.error(err)
 
 	return lv_d_dict
 
@@ -640,22 +664,39 @@ def create_infil_dict():
 	return infil_dict
 
 
-def post_process_infil(infil_dict, filename, sim_folder):
-	# TODO: Write post process infiltration
-	infil_dict['Ext Surfaces'] = infil_dict['Ext Surfaces'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
+# def post_process_infil(infil_dict, filename, sim_folder):
+# 	# TODO: Write post process infiltration
+# 	infil_dict['Ext Surfaces'] = infil_dict['Ext Surfaces'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
+#
+# 	infil_dict['Space'] = infil_dict['Space'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
+#
+# 	folder_name = './{0}'.format(filename)  # default project specific folder
+# 	if sim_folder:
+# 		folder_name = './Parse-SIM output/SV-A'
+#
+# 	try:
+# 		with open(folder_name + '/{0} Infiltration.csv'.format(filename), 'w') as f:
+# 			print('{} Infiltration\n\n'.format(filename), file=f)
+# 			for k, v in ss_b_dict.items():
+# 				print(k, file=f)
+# 				v.to_csv(f)
+# 				print('', file=f)
+# 	except OSError as err:
+# 		logger.error(err)
+#
+# 	return infil_dict
 
-	infil_dict['Space'] = infil_dict['Space'].apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
-	folder_name = './{0}'.format(filename)  # default project specific folder
-	if sim_folder:
-		folder_name = './Parse-SIM output/SV-A'
+def create_master_df():
+	master_col = ['Location',
+	              'Parametrics',
+	              'Fuel Type',
+	              'End Use',
+	              'Consumption (kWh)', ]
+	master_info = pd.DataFrame(columns=master_col)
 
-	with open(folder_name + '/{0} Infiltration.csv'.format(filename), 'w') as f:
-		print('{} Infiltration\n\n'.format(filename), file=f)
-		for k, v in ss_b_dict.items():
-			print(k, file=f)
-			v.to_csv(f)
-			print('', file=f)
+	return master_info
+
 
 
 def aggregate_csv(foldername, sim_folder=False):

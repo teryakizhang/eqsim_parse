@@ -26,6 +26,7 @@ ch.setLevel(logging.DEBUG)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+
 ### Parse Function ###
 
 def process_sim():
@@ -34,23 +35,6 @@ def process_sim():
 		logger.warning("Warning: No SIM file found. \n"
 		               "Please put your SIM files in the same directory as this script.")
 		exit()
-	# Folder option
-	# def sim_folder():
-	#
-	# 	folder_invalid_response = True
-	# 	while folder_invalid_response:
-	# 		sim_folder = input(folder_prompt)
-	# 		if sim_folder in ['Y', 'y']:
-	# 			sim_folder = True
-	# 			folder_invalid_response = False
-	# 		elif sim_folder in ['N', 'n']:
-	# 			logger.info('Continuing with default folder')
-	# 			sim_folder = False
-	# 			folder_invalid_response = False
-	# 		else:
-	# 			logger.warning('Invalid Response. Please try again.')
-	# 			continue
-	# 	return sim_folder
 
 	def yes_no(prompt):
 		invalid_response = True
@@ -68,17 +52,21 @@ def process_sim():
 	                 "all the SIM I found? (Y/N): ".format(len(filelist))
 	proceed_opt = yes_no(proceed_prompt)
 
-
 	# Parse SIM
+	master_list = []
+
 	if len(filelist) >= 1:
 		if proceed_opt == 'y':
-			folder_prompt = "Do you want to output to SIM report specific folders? \n" \
-			                "Such as /BEPS/project.csv (good for batch benchmarking) (Y/N): "
+			folder_prompt = "Y for SIM report specific folders/N for default project folders. \n" \
+			                "SIM report folders such as /BEPS/project.csv (good for batch benchmarking) (Y/N): "
 			yn_dict = {'y': True, 'n': False}
 			sim_folder = yn_dict[yes_no(folder_prompt)]
 			for file in filelist:
 				sim_path = file
-				parse_sim(sim_path, sim_folder)
+				measure_dicts = parse_sim(sim_path, sim_folder)  # TODO: Dictionary for location, scenario, and BEPS
+				loc_scene = parse_master(sim_path)
+				loc_scene.append(measure_dicts[2]['BUILDING COMPONENTS'].copy())
+				master_list.append(loc_scene)
 		elif proceed_opt == 'n':
 			logger.info('Exiting.....')
 			exit('User Terminated')
@@ -96,7 +84,6 @@ def process_sim():
 				logger.error('OS Error:{}'.format(err))
 				continue
 		print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
-		invalid_response = False
 	elif agg_opt == 'y' and sim_folder:
 		report_name = ['BEPS', 'PV-A', 'SV-A', 'PS-F', 'SS-A', 'SS-B', 'LV-D']
 		for report in report_name:
@@ -109,7 +96,21 @@ def process_sim():
 	elif agg_opt == 'n':
 		print('No CSV aggregation, continuing...\n')
 
+	# Master EUB dump option
+	# Currently only designed for CaGBC parametrics
+	master_prompt = 'Do you want to output a master EUB table? \n' \
+	                'Note: Currently only compatible with parametrics (Y/N)'
+	master_opt = yes_no(master_prompt)
+	if master_opt == 'y':
+		process_master(master_list)
+	else:
+		print('Continuing...\n')
+
 	input('All Done! Press ENTER to exit')
+
+
+# if master_list != None:
+# 	return master_list
 
 
 def parse_sim(sim_path, sim_folder=False):
@@ -164,6 +165,7 @@ def parse_sim(sim_path, sim_folder=False):
 	for i, line in enumerate(f_list):
 		l_list = line.split()
 		if len(l_list) > 1:
+
 			if l_list[0] == "REPORT-":
 				current_report = l_list[1]
 
@@ -182,21 +184,18 @@ def parse_sim(sim_path, sim_folder=False):
 						current_meter = m2.group(1)
 					else:
 						raise Exception("Error, no meter name")
-						print(line)
 				elif current_report == 'SS-A':
 					m3 = re.match(ss_a_header_pattern, line)
 					if m3:
 						current_sys = m3.group(1)
 					else:
 						raise Exception('Error, no SS-A system name')
-						print(line)
 				elif current_report == 'SS-B':
 					m4 = re.match(ss_b_header_pattern, line)
 					if m4:
 						current_sys = m4.group(1)
 					else:
 						raise Exception('Error, no SS-B system name')
-						print(line)
 				continue
 
 		# Parsing BEPS
@@ -283,7 +282,6 @@ def parse_sim(sim_path, sim_folder=False):
 				psf_l_list[-1] = psf_l_list[-1].rstrip('\n')
 				proper_date = ["'" + date for date in psf_l_list[-13:]]
 				ps_f_dict[current_meter].loc[(current_month, measure_dict[psf_l_list[0]]), :] = proper_date
-
 
 		# Parsing SS-A
 		if current_report == 'SS-A' and len(l_list) > 0:
@@ -374,31 +372,110 @@ def parse_sim(sim_path, sim_folder=False):
 	return sv_a_dict, pv_a_dict, beps_dict, ps_f_dict, ss_a_dict, ss_b_dict, lv_d_dict
 
 
-def infiltration(sim_path):
-	# TODO: write infiltration parse
-	logging.info('Loading{} for infiltration'.format(sim_path))
-
+def parse_master(sim_path):
+	### Open file ###
 	with open(sim_path, encoding="Latin1") as f:
 		f_list = f.readlines()
 
 	filename = sim_path[2:-4]
 
-	### Infiltration ###
-	# Initializes a dictionary of dataframes to collect infiltration data
-	infil_dict = pim.create_infil_dict()
-	space_pattern = r'(?<=\s{2}in\sspace:\s)[\w\s()-]+?(?=\s+)'
-	current_surface = None
-	current_space = None
+	### Master Info ###
+	location_pattern = "(?<=WEATHER\s{1}FILE-\s{1})\w*(?=\s{1}[A-Z]{2})"
+	location = None
+	scenario_pattern = "\d{1,2}(?=[.]SIM)|Baseline Design(?=[.]SIM)"
+	scenario = None
 
-	### Infiltration Parsing ###
+	### Parsing for Master ###
 	for i, line in enumerate(f_list):
 		l_list = line.split()
 		if len(l_list) > 1:
-			if l_list[0] == "REPORT-":
-				current_report = l_list[1]
+			if location == None:
+				m = re.search(location_pattern, line)
+				if m:
+					location = m.group()
+				# print(location)
+			if scenario == None:
+				m2 = re.search(scenario_pattern, sim_path)
+				if m2:
+					scenario = m2.group()
+				# print(scenario)
+		if not location == None and not scenario == None:
+			break
 
-				if current_report == 'LV-D':
-					pass
+	return [location, scenario]
+
+
+def process_master(master_list):
+	master_df = pim.create_master_df()
+	eub = ['Lights',
+	       'Task Lights',
+	       'Misc Equipment',
+	       'Space Heating',
+	       'Space Cooling',
+	       'Heat Reject',
+	       'Pumps/Aux',
+	       'Vent Fans',
+	       'Refrig Display',
+	       'Ht Pump Supplem',
+	       'DHW',
+	       'Ext Usage']
+
+	for sim in master_list:
+		location = sim[0]
+		scenario = 'Parametric ' + sim[1]
+		beps = sim[2]
+		for row in beps.itertuples(name=None):
+			ener_list = []
+			val = row[2:-1]
+			values = list(map(lambda x: x * 293.07107, val))  # Convert MBTU to kWh
+			eub_val = zip(eub, values)
+			if 'ELECTRICITY' in row:
+				ener_list = [['Electricity'] + list(tup) for tup in eub_val]
+			if 'NATURAL-GAS' in row:
+				ener_list = [['Natural Gas'] + list(tup) for tup in eub_val]
+			if len(ener_list[0]) == 3:
+				para_list = [[scenario] + list(tup) for tup in ener_list]
+				# logger.debug(para_list)
+				final_list = [[location] + list(tup) for tup in para_list]
+				master_df = master_df.append(pd.DataFrame(final_list, columns=master_df.columns), ignore_index=True)
+
+	try:
+		with open('Master EUB.csv', 'w') as f:
+			print('Master EUB\n\n', file=f)
+			master_df.to_csv(f)
+			print('', file=f)
+	except OSError as err:
+		logger.error(err)
+
+	logger.info('EUB Dump Complete!')
+	return master_df
+
+
+# def infiltration(sim_path):
+# 	# TODO: write infiltration parse
+# 	logging.info('Loading{} for infiltration'.format(sim_path))
+#
+# 	with open(sim_path, encoding="Latin1") as f:
+# 		f_list = f.readlines()
+#
+# 	filename = sim_path[2:-4]
+#
+# 	### Infiltration ###
+# 	# Initializes a dictionary of dataframes to collect infiltration data
+# 	infil_dict = pim.create_infil_dict()
+# 	space_pattern = r'(?<=\s{2}in\sspace:\s)[\w\s()-]+?(?=\s+)'
+# 	current_surface = None
+# 	current_space = None
+#
+# 	### Infiltration Parsing ###
+# 	for i, line in enumerate(f_list):
+# 		l_list = line.split()
+# 		if len(l_list) > 1:
+# 			if l_list[0] == "REPORT-":
+# 				current_report = l_list[1]
+#
+# 				if current_report == 'LV-D':
+# 					pass
 
 
 ### Main Function ###
