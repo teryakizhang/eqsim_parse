@@ -688,7 +688,8 @@ def create_infil_dict():
 
 
 def create_master_df():
-	master_col = ['Location',
+	master_col = ['Filename',
+	              'Location',
 	              'Parametrics',
 	              'Fuel Type',
 	              'End Use',
@@ -697,6 +698,76 @@ def create_master_df():
 
 	return master_info
 
+
+def process_master(master_list):
+	master_df = create_master_df()
+	eub = ['Lights',
+	       'Task Lights',
+	       'Misc Equipment',
+	       'Space Heating',
+	       'Space Cooling',
+	       'Heat Reject',
+	       'Pumps/Aux',
+	       'Vent Fans',
+	       'Refrig Display',
+	       'Ht Pump Supplem',
+	       'DHW',
+	       'Ext Usage']
+
+	for sim in master_list:
+		filename = sim[0]
+		location = sim[1]
+		scenario = 'Parametric ' + sim[2]
+		beps = sim[3]
+		for row in beps.itertuples(name=None):
+			ener_list = []
+			val = row[2:-1]
+			values = list(map(lambda x: x * 293.07107, val))  # Convert MBTU to kWh
+			eub_val = zip(eub, values)
+			if 'ELECTRICITY' in row:
+				ener_list = [['Electricity'] + list(tup) for tup in eub_val]
+			if 'NATURAL-GAS' in row:
+				ener_list = [['Natural Gas'] + list(tup) for tup in eub_val]
+			if len(ener_list[0]) == 3:
+				para_list = [[scenario] + list(tup) for tup in ener_list]
+				# logger.debug(para_list)
+				loc_list = [[location] + list(tup) for tup in para_list]
+				final_list = [[filename] + list(tup) for tup in loc_list]
+				master_df = master_df.append(pd.DataFrame(final_list, columns=master_df.columns), ignore_index=True)
+
+	df_size = master_df.shape[0]
+	start_cell = "B1"
+	end_cell = "G{}".format(df_size + 1)
+
+	try:
+		writer = pd.ExcelWriter("Master EUB.xlsx", engine='xlsxwriter')
+		master_df.to_excel(writer, sheet_name='Master EUB')
+
+		# Formatting of EUB
+		workbook = writer.book
+		worksheet = writer.sheets['Master EUB']
+		consump_format = workbook.add_format({'num_format': 2})
+		worksheet.add_table('{0}:{1}'.format(start_cell, end_cell), {'columns': [{'header': 'Filename'},
+		                                                                         {'header': 'Location'},
+		                                                                         {'header': 'Parametrics'},
+		                                                                         {'header': 'Fuel Type'},
+		                                                                         {'header': 'End Use'},
+		                                                                         {
+			                                                                         'header': 'Consumption (kWh)'}]})  # 'header_row': 0, 'autofilter': True
+		worksheet.set_column('B:B', 18.5)
+		worksheet.set_column('C:C', 10.5)
+		worksheet.set_column('D:D', 14)
+		worksheet.set_column('E:E', 10.5)
+		worksheet.set_column('F:F', 22)
+		worksheet.set_column('G:G', 18.5, consump_format)
+
+		writer.save()
+
+	except OSError as err:
+		logger.error(err)
+
+	logger.info('EUB Dump Complete!')
+	return master_df
 
 
 def aggregate_csv(foldername, sim_folder=False):

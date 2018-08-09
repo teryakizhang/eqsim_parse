@@ -73,28 +73,28 @@ def process_sim():
 	# something goes here
 
 	# CSV Aggregating option
-	agg_prompt = "Do you want to aggregate all the CSVs into 1 Excel file? (Y/N): "
-	agg_opt = yes_no(agg_prompt)
-	if agg_opt == 'y' and not sim_folder:
-		for file in filelist:
-			filename = file[2:-4]
-			try:
-				pim.aggregate_csv(filename)
-			except OSError as err:
-				logger.error('OS Error:{}'.format(err))
-				continue
-		print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
-	elif agg_opt == 'y' and sim_folder:
-		report_name = ['BEPS', 'PV-A', 'SV-A', 'PS-F', 'SS-A', 'SS-B', 'LV-D']
-		for report in report_name:
-			try:
-				pim.aggregate_csv(report, True)
-			except OSError as err:
-				logger.error('OS Error:{}'.format(err))
-				continue
-		print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
-	elif agg_opt == 'n':
-		print('No CSV aggregation, continuing...\n')
+	# agg_prompt = "Do you want to aggregate all the CSVs into 1 Excel file? (Y/N): "
+	# agg_opt = yes_no(agg_prompt)
+	# if agg_opt == 'y' and not sim_folder:
+	# 	for file in filelist:
+	# 		filename = file[2:-4]
+	# 		try:
+	# 			pim.aggregate_csv(filename)
+	# 		except OSError as err:
+	# 			logger.error('OS Error:{}'.format(err))
+	# 			continue
+	# 	print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
+	# elif agg_opt == 'y' and sim_folder:
+	# 	report_name = ['BEPS', 'PV-A', 'SV-A', 'PS-F', 'SS-A', 'SS-B', 'LV-D']
+	# 	for report in report_name:
+	# 		try:
+	# 			pim.aggregate_csv(report, True)
+	# 		except OSError as err:
+	# 			logger.error('OS Error:{}'.format(err))
+	# 			continue
+	# 	print('Navigate to the output folders and click the Master.xlsm to finish aggregating.\n')
+	# elif agg_opt == 'n':
+	# 	print('No CSV aggregation, continuing...\n')
 
 	# Master EUB dump option
 	# Currently only designed for CaGBC parametrics
@@ -102,11 +102,13 @@ def process_sim():
 	                'Note: Currently only compatible with parametrics (Y/N)'
 	master_opt = yes_no(master_prompt)
 	if master_opt == 'y':
-		process_master(master_list)
+		master_df = pim.process_master(master_list)
 	else:
 		print('Continuing...\n')
 
 	input('All Done! Press ENTER to exit')
+
+	return master_df
 
 
 # if master_list != None:
@@ -382,7 +384,7 @@ def parse_master(sim_path):
 	### Master Info ###
 	location_pattern = "(?<=WEATHER\s{1}FILE-\s{1})\w*(?=\s{1}[A-Z]{2})"
 	location = None
-	scenario_pattern = "\d{1,2}(?=[.]SIM)|Baseline Design(?=[.]SIM)"
+	scenario_pattern = "\d{1,2}(?=[.][SIMsim])|Baseline Design(?=[.][SIMsim])"
 	scenario = None
 
 	### Parsing for Master ###
@@ -393,62 +395,16 @@ def parse_master(sim_path):
 				m = re.search(location_pattern, line)
 				if m:
 					location = m.group()
-				# print(location)
+			# print(location)
 			if scenario == None:
 				m2 = re.search(scenario_pattern, sim_path)
 				if m2:
 					scenario = m2.group()
-				# print(scenario)
+		# print(scenario)
 		if not location == None and not scenario == None:
 			break
 
-	return [location, scenario]
-
-
-def process_master(master_list):
-	master_df = pim.create_master_df()
-	eub = ['Lights',
-	       'Task Lights',
-	       'Misc Equipment',
-	       'Space Heating',
-	       'Space Cooling',
-	       'Heat Reject',
-	       'Pumps/Aux',
-	       'Vent Fans',
-	       'Refrig Display',
-	       'Ht Pump Supplem',
-	       'DHW',
-	       'Ext Usage']
-
-	for sim in master_list:
-		location = sim[0]
-		scenario = 'Parametric ' + sim[1]
-		beps = sim[2]
-		for row in beps.itertuples(name=None):
-			ener_list = []
-			val = row[2:-1]
-			values = list(map(lambda x: x * 293.07107, val))  # Convert MBTU to kWh
-			eub_val = zip(eub, values)
-			if 'ELECTRICITY' in row:
-				ener_list = [['Electricity'] + list(tup) for tup in eub_val]
-			if 'NATURAL-GAS' in row:
-				ener_list = [['Natural Gas'] + list(tup) for tup in eub_val]
-			if len(ener_list[0]) == 3:
-				para_list = [[scenario] + list(tup) for tup in ener_list]
-				# logger.debug(para_list)
-				final_list = [[location] + list(tup) for tup in para_list]
-				master_df = master_df.append(pd.DataFrame(final_list, columns=master_df.columns), ignore_index=True)
-
-	try:
-		with open('Master EUB.csv', 'w') as f:
-			print('Master EUB\n\n', file=f)
-			master_df.to_csv(f)
-			print('', file=f)
-	except OSError as err:
-		logger.error(err)
-
-	logger.info('EUB Dump Complete!')
-	return master_df
+	return [filename, location, scenario]
 
 
 # def infiltration(sim_path):
