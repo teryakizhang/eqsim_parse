@@ -740,6 +740,7 @@ def process_master(master_list):
 	end_cell = "G{}".format(df_size + 1)
 
 	try:
+		# Export to Excel
 		writer = pd.ExcelWriter("Master EUB.xlsx", engine='xlsxwriter')
 		master_df.to_excel(writer, sheet_name='Master EUB')
 
@@ -752,8 +753,7 @@ def process_master(master_list):
 		                                                                         {'header': 'Parametrics'},
 		                                                                         {'header': 'Fuel Type'},
 		                                                                         {'header': 'End Use'},
-		                                                                         {
-			                                                                         'header': 'Consumption (kWh)'}]})  # 'header_row': 0, 'autofilter': True
+		                                                                         {'header': 'Consumption (kWh)'}]})
 		worksheet.set_column('B:B', 18.5)
 		worksheet.set_column('C:C', 10.5)
 		worksheet.set_column('D:D', 14)
@@ -769,21 +769,20 @@ def process_master(master_list):
 	logger.info('EUB Dump Complete!')
 	return master_df
 
-
-def aggregate_csv(foldername, sim_folder=False):
-	folder_name = './{0}'.format(foldername)  # default project specific folder
-	if sim_folder:
-		folder_name = './Parse-SIM output/{0}'.format(foldername)
-	workbook = xlsxwriter.Workbook(folder_name + '/{0} Master.xlsm'.format(foldername))
-	worksheet = workbook.add_worksheet()
-	worksheet.set_column('A:A', 30)
-	try:
-		workbook.add_vba_project('./data/vbaProject.bin')
-	except OSError as err:
-		print("OS error: {}".format(err))
-	worksheet.write('A1', "Press button to select the files you'd like to aggregate")
-	worksheet.insert_button('B1', {'macro': 'CombineCsvFiles',
-	                               'caption': 'Press Me',
-	                               'Width': 80,
-	                               'height': 30})
-	workbook.close()
+# def aggregate_csv(foldername, sim_folder=False):
+# 	folder_name = './{0}'.format(foldername)  # default project specific folder
+# 	if sim_folder:
+# 		folder_name = './Parse-SIM output/{0}'.format(foldername)
+# 	workbook = xlsxwriter.Workbook(folder_name + '/{0} Master.xlsm'.format(foldername))
+# 	worksheet = workbook.add_worksheet()
+# 	worksheet.set_column('A:A', 30)
+# 	try:
+# 		workbook.add_vba_project('./data/vbaProject.bin')
+# 	except OSError as err:
+# 		print("OS error: {}".format(err))
+# 	worksheet.write('A1', "Press button to select the files you'd like to aggregate")
+# 	worksheet.insert_button('B1', {'macro': 'CombineCsvFiles',
+# 	                               'caption': 'Press Me',
+# 	                               'Width': 80,
+# 	                               'height': 30})
+# 	workbook.close()

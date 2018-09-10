@@ -106,7 +106,7 @@ def process_sim():
 	else:
 		print('Continuing...\n')
 
-	input('All Done! Press ENTER to exit')
+	# input('All Done! Press ENTER to exit')
 
 	return master_df
 
@@ -382,7 +382,7 @@ def parse_master(sim_path):
 	filename = sim_path[2:-4]
 
 	### Master Info ###
-	location_pattern = "(?<=WEATHER\s{1}FILE-\s{1})\w*(?=\s{1}[A-Z]{2})"
+	location_pattern = "[TorontoCalgaryHalifaxVancouverMontrealOttawa]*"    #\w*(?=\s{1}[A-Z]{2})
 	location = None
 	scenario_pattern = "\d{1,2}(?=[.][SIMsim])|Baseline Design(?=[.][SIMsim])"
 	scenario = None
@@ -437,6 +437,18 @@ def parse_master(sim_path):
 ### Main Function ###
 
 if __name__ == '__main__':
-	process_sim()
+
+	while True:
+		process_sim()
+		while True:
+			answer = input('Run again? (Y/N): ').lower()
+			if answer in ('y', 'n'):
+				break
+			logger.warning('Invalid input. Please try again')
+		if answer == 'y':
+			continue
+		else:
+			print('Goodbye!')
+			break
 
 	sys.exit(0)
